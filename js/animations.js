@@ -1,9 +1,20 @@
 /* ==========================================================================
    A NIGHT OF FRIGHTS & DELIGHTS — animations.js
-   Canvas dust field, drifting bats & mist, restrained custom cursor,
-   cauldron magic, scroll reveals, emoji confetti.
 
-   Exposes window.HallowFX for main.js.
+   Performance model
+   -----------------
+   · Every glowing dot is a PRE-RENDERED sprite (one small canvas per colour)
+     blitted with drawImage — no gradients are created per particle per frame.
+   · One render loop for ambient dust; it is frame-capped (30fps, 24 on slow
+     devices) because the dust drifts slowly and nobody can tell the difference.
+   · DPR is capped at 1.5 (1 on low-end/mobile) — a 3x retina canvas costs ~9x
+     the fill rate for a barely visible gain on soft dust.
+   · The custom cursor uses CSS transforms + a CSS transition for the trailing
+     ring, so it needs no render loop at all.
+   · Confetti glyphs are rasterised once and blitted, not re-laid-out per frame.
+   · A watchdog samples frame times and permanently steps quality down if the
+     device is struggling.
+   · Everything pauses when the tab is hidden.
    ========================================================================== */
 
 (function () {
@@ -16,36 +27,74 @@
   const randInt = (min, max) => Math.floor(rand(min, max + 1));
   const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const mqMobile = window.matchMedia('(max-width: 760px)');
+  const mqFine = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+  const reduceMotion = mqReduce.matches;
+  const finePointer = mqFine.matches;
+  const cores = navigator.hardwareConcurrency || 4;
+  const memory = navigator.deviceMemory || 4;
+  const lowEnd = mqMobile.matches || cores <= 4 || memory <= 4;
+
+  /* Pre-render a soft radial dot once, then blit it everywhere. */
+  function makeGlowSprite(rgb, size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    const half = size / 2;
+    const grad = ctx.createRadialGradient(half, half, 0, half, half, half);
+    grad.addColorStop(0, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},1)`);
+    grad.addColorStop(0.35, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.45)`);
+    grad.addColorStop(1, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(half, half, half, 0, Math.PI * 2);
+    ctx.fill();
+    return canvas;
+  }
 
   /* ======================================================================
-     1. AMBIENT DUST / ASH FIELD
-     Restrained: fine motes catching candlelight, not a neon particle show.
+     1. AMBIENT DUST — sprite-blitted, frame-capped, self-throttling
      ====================================================================== */
-  const ParticleField = (() => {
+  const Dust = (() => {
     const canvas = $('#particleCanvas');
     if (!canvas) return { burst() {} };
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
     if (!ctx) return { burst() {} };
+
+    const COLORS = [
+      [232, 214, 180], // bone
+      [212, 160, 108], // candle amber
+      [198, 96, 92],   // red ash
+      [164, 174, 200]  // moonlight
+    ];
+    const SPRITES = COLORS.map((c) => makeGlowSprite(c, 32));
 
     let width = 0;
     let height = 0;
     let particles = [];
     let bursts = [];
     let rafId = null;
-    let running = true;
+    let running = false;
 
-    const PALETTE = [
-      { r: 232, g: 214, b: 180 }, // bone dust
-      { r: 210, g: 160, b: 110 }, // candle amber
-      { r: 200, g: 90, b: 90 },   // faint red ash
-      { r: 165, g: 175, b: 200 }  // cold moonlight
-    ];
+    // Quality knobs (degrade if the device struggles)
+    let quality = lowEnd ? 0.55 : 1;
+    let targetFps = lowEnd ? 24 : 30;
+    let dprCap = lowEnd ? 1 : 1.5;
+    let frameBudget = 1000 / targetFps;
+    let lastDraw = 0;
+    let slowFrames = 0;
 
-    function sizeCanvas() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    function countFor(area) {
+      const base = clamp(Math.round(area / 42000), 14, 54);
+      return Math.max(8, Math.round(base * quality));
+    }
+
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
       width = window.innerWidth;
       height = window.innerHeight;
       canvas.width = Math.floor(width * dpr);
@@ -55,146 +104,170 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    function makeParticle(seeded = false) {
-      const color = PALETTE[randInt(0, PALETTE.length - 1)];
-      const depth = rand(0.4, 1);
+    function makeParticle(seeded) {
+      const spriteIndex = randInt(0, SPRITES.length - 1);
+      const depth = rand(0.45, 1);
       return {
         x: rand(0, width),
-        y: seeded ? rand(0, height) : height + rand(0, 60),
-        vx: rand(-0.12, 0.12),
-        vy: -rand(0.08, 0.34) * depth,
-        radius: rand(0.4, 1.3) * depth + 0.25,
-        color,
-        alpha: rand(0.1, 0.42) * depth,
-        flicker: rand(0.002, 0.01),
+        y: seeded ? rand(0, height) : height + rand(0, 40),
+        vx: rand(-0.1, 0.1),
+        vy: -rand(0.07, 0.28) * depth,
+        radius: rand(1.4, 4.2) * depth,
+        sprite: SPRITES[spriteIndex],
+        alpha: rand(0.1, 0.4) * depth,
+        flicker: rand(0.002, 0.008),
         phase: rand(0, Math.PI * 2),
-        sway: rand(0.001, 0.005)
+        sway: rand(0.001, 0.004)
       };
     }
 
     function populate() {
-      const target = clamp(Math.round((width * height) / 34000), 22, 70);
+      const target = countFor(width * height);
       particles = Array.from({ length: target }, () => makeParticle(true));
     }
 
-    function drawParticle(p) {
-      const reach = p.radius * 3.2;
-      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, reach);
-      grad.addColorStop(0, `rgba(${p.color.r},${p.color.g},${p.color.b},${p.alpha})`);
-      grad.addColorStop(1, `rgba(${p.color.r},${p.color.g},${p.color.b},0)`);
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, reach, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function drawBurstParticle(b) {
-      const a = clamp(b.life, 0, 1) * b.alpha;
-      ctx.fillStyle = `rgba(${b.color.r},${b.color.g},${b.color.b},${a})`;
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, Math.max(0.5, b.radius * b.life), 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function frame() {
-      if (!running) return;
+    function draw(now) {
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = 'lighter';
 
-      for (const p of particles) {
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
         p.phase += p.sway;
-        p.x += p.vx + Math.sin(p.phase) * 0.3;
+        p.x += p.vx + Math.sin(p.phase) * 0.25;
         p.y += p.vy;
         p.alpha += Math.sin(p.phase * 1.6) * p.flicker;
-        p.alpha = clamp(p.alpha, 0.05, 0.5);
 
-        if (p.y < -30 || p.x < -50 || p.x > width + 50) {
-          Object.assign(p, makeParticle(false));
+        if (p.y < -24 || p.x < -40 || p.x > width + 40) {
+          particles[i] = makeParticle(false);
+          continue;
         }
-        drawParticle(p);
+        if (p.alpha < 0.04) p.alpha = 0.04;
+        if (p.alpha > 0.45) p.alpha = 0.45;
+
+        ctx.globalAlpha = p.alpha;
+        const d = p.radius * 2;
+        ctx.drawImage(p.sprite, p.x - p.radius, p.y - p.radius, d, d);
       }
 
-      bursts = bursts.filter((b) => {
-        b.x += b.vx;
-        b.y += b.vy;
-        b.vx *= 0.975;
-        b.vy = b.vy * 0.975 + b.gravity;
-        b.life -= b.decay;
-        if (b.life <= 0) return false;
-        drawBurstParticle(b);
-        return true;
-      });
+      // Cauldron bursts share the same sprites
+      if (bursts.length) {
+        for (let i = bursts.length - 1; i >= 0; i--) {
+          const b = bursts[i];
+          b.x += b.vx;
+          b.y += b.vy;
+          b.vx *= 0.972;
+          b.vy = b.vy * 0.972 + b.gravity;
+          b.life -= b.decay;
+          if (b.life <= 0) {
+            bursts.splice(i, 1);
+            continue;
+          }
+          ctx.globalAlpha = clamp(b.life, 0, 1) * b.alpha;
+          const d = b.radius * b.life * 2;
+          ctx.drawImage(b.sprite, b.x - d / 2, b.y - d / 2, d, d);
+        }
+      }
 
+      ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
-      rafId = requestAnimationFrame(frame);
+
+      // Watchdog: if we are consistently behind, drop quality once
+      if (lastDraw) {
+        const delta = now - lastDraw;
+        if (delta > frameBudget * 2.4) slowFrames++;
+        else if (slowFrames > 0) slowFrames--;
+
+        if (slowFrames > 60 && quality > 0.35) {
+          quality *= 0.6;
+          targetFps = Math.max(18, targetFps - 8);
+          frameBudget = 1000 / targetFps;
+          slowFrames = 0;
+          populate();
+        }
+      }
+      lastDraw = now;
+    }
+
+    function loop(now) {
+      if (!running) return;
+      rafId = requestAnimationFrame(loop);
+      if (now - (loop._last || 0) < frameBudget) return;
+      loop._last = now;
+      draw(now);
     }
 
     function start() {
-      sizeCanvas();
+      resize();
       populate();
       if (reduceMotion) {
+        // Paint one static frame so the ambience still exists
         ctx.clearRect(0, 0, width, height);
         ctx.globalCompositeOperation = 'lighter';
-        particles.forEach(drawParticle);
+        particles.forEach((p) => {
+          ctx.globalAlpha = p.alpha;
+          const d = p.radius * 2;
+          ctx.drawImage(p.sprite, p.x - p.radius, p.y - p.radius, d, d);
+        });
+        ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
         return;
       }
       if (rafId) cancelAnimationFrame(rafId);
       running = true;
-      frame();
+      lastDraw = 0;
+      rafId = requestAnimationFrame(loop);
     }
 
-    let resizeTimer;
+    function stop() {
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    let resizeTimer = null;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(start, 220);
-    });
+      resizeTimer = setTimeout(() => {
+        resize();
+        populate();
+      }, 240);
+    }, { passive: true });
 
     document.addEventListener('visibilitychange', () => {
       if (reduceMotion) return;
-      if (document.hidden) {
-        running = false;
-        if (rafId) cancelAnimationFrame(rafId);
-      } else if (!rafId || !running) {
-        running = true;
-        frame();
-      }
+      if (document.hidden) stop();
+      else start();
     });
 
-    /* Radial burst — used by the cauldron */
+    /* Radial burst of embers (cauldron). Reuses dust sprites. */
     function burst(x, y, opts = {}) {
-      const count = opts.count || 46;
-      const colors = opts.colors || PALETTE;
+      const count = Math.round((opts.count || 40) * (lowEnd ? 0.6 : 1));
       for (let i = 0; i < count; i++) {
         const angle = rand(0, Math.PI * 2);
-        const speed = rand(1.6, 8);
-        const color = colors[randInt(0, colors.length - 1)];
+        const speed = rand(1.4, 7);
         bursts.push({
           x, y,
           vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - rand(0.4, 2),
+          vy: Math.sin(angle) * speed - rand(0.3, 2),
           gravity: rand(-0.03, 0.06),
-          radius: rand(1.1, 3.4),
-          color,
-          alpha: rand(0.5, 1),
+          radius: rand(1.6, 4.4),
+          sprite: SPRITES[randInt(0, SPRITES.length - 1)],
+          alpha: rand(0.55, 1),
           life: 1,
-          decay: rand(0.008, 0.022)
+          decay: rand(0.01, 0.024)
         });
       }
-      if (!running && !reduceMotion) {
-        running = true;
-        frame();
-      }
+      if (!running && !reduceMotion) start();
     }
 
     start();
-    return { burst, resize: start };
+    return { burst, resize: start, stop };
   })();
 
   /* ======================================================================
-     2. DRIFTING BATS & MIST — sparse, silhouetted, cinematic
+     2. DRIFTING BATS & MIST — CSS-driven, intentionally sparse
      ====================================================================== */
-  const SpriteLayer = (() => {
+  (() => {
     const layer = $('#floatingLayer');
     if (!layer || reduceMotion) return;
 
@@ -208,8 +281,8 @@
         <svg viewBox="0 0 240 90" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <radialGradient id="mGal" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="rgba(180,190,215,0.5)"/>
-              <stop offset="60%" stop-color="rgba(160,170,200,0.18)"/>
+              <stop offset="0%" stop-color="rgba(180,190,215,0.42)"/>
+              <stop offset="60%" stop-color="rgba(160,170,200,0.14)"/>
               <stop offset="100%" stop-color="rgba(160,170,200,0)"/>
             </radialGradient>
           </defs>
@@ -218,10 +291,11 @@
     };
 
     const KINDS = [
-      { kind: 'bat', count: window.innerWidth < 760 ? 2 : 4, size: [26, 64], opacity: [0.14, 0.34], duration: [46, 84], top: [8, 46] },
-      { kind: 'mist', count: window.innerWidth < 760 ? 2 : 3, size: [240, 420], opacity: [0.1, 0.2], duration: [70, 120], top: [30, 82] }
+      { kind: 'bat', count: lowEnd ? 2 : 4, size: [26, 60], opacity: [0.14, 0.32], duration: [46, 84], top: [8, 46] },
+      { kind: 'mist', count: lowEnd ? 1 : 3, size: [240, 400], opacity: [0.08, 0.18], duration: [70, 120], top: [30, 82] }
     ];
 
+    const frag = document.createDocumentFragment();
     KINDS.forEach((group) => {
       for (let i = 0; i < group.count; i++) {
         const el = document.createElement('div');
@@ -230,13 +304,10 @@
 
         const size = rand(group.size[0], group.size[1]);
         const duration = rand(group.duration[0], group.duration[1]);
-        el.style.width = size + 'px';
-        el.style.top = rand(group.top[0], group.top[1]) + 'vh';
-        el.style.left = '0';
-        el.style.animationDuration = duration.toFixed(1) + 's';
-        el.style.animationDelay = (-rand(0, duration)).toFixed(1) + 's';
-        el.style.setProperty('--o', rand(group.opacity[0], group.opacity[1]).toFixed(2));
-        el.style.setProperty('--s', rand(0.85, 1.2).toFixed(2));
+        el.style.cssText =
+          `width:${size}px;top:${rand(group.top[0], group.top[1]).toFixed(1)}vh;left:0;` +
+          `animation-duration:${duration.toFixed(1)}s;animation-delay:${(-rand(0, duration)).toFixed(1)}s;` +
+          `--o:${rand(group.opacity[0], group.opacity[1]).toFixed(2)};--s:${rand(0.85, 1.2).toFixed(2)}`;
 
         const inner = document.createElement('div');
         inner.className = 'sprite__inner';
@@ -245,94 +316,80 @@
         inner.style.animationDelay = (-rand(0, 4)).toFixed(1) + 's';
 
         el.appendChild(inner);
-        layer.appendChild(el);
+        frag.appendChild(el);
       }
     });
+    layer.appendChild(frag);
   })();
 
   /* ======================================================================
-     3. CUSTOM CURSOR — a fine point and a slow ring, no glow
+     3. CUSTOM CURSOR — DOM only, no render loop.
+     The dot uses CSS transitions; the ring "lags" via a longer transition.
      ====================================================================== */
   (() => {
     if (!finePointer || reduceMotion) return;
 
-    const ember = $('#cursorEmber');
-    const trailEl = $('#cursorTrail');
-    if (!ember) return;
+    const dot = $('#cursorEmber');
+    const ring = $('#cursorTrail');
+    if (!dot) return;
 
     document.body.classList.add('has-custom-cursor');
+    let queued = false;
+    let px = 0;
+    let py = 0;
+    let shown = false;
 
-    let mouseX = window.innerWidth / 2;
-    let mouseY = window.innerHeight / 2;
-    let dotX = mouseX;
-    let dotY = mouseY;
-    let ringX = mouseX;
-    let ringY = mouseY;
-    let hasMoved = false;
+    function paint() {
+      queued = false;
+      const t = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%)`;
+      dot.style.transform = t;
+      if (ring) ring.style.transform = t;
+    }
 
     window.addEventListener('pointermove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      if (!hasMoved) {
-        hasMoved = true;
-        dotX = ringX = mouseX;
-        dotY = ringY = mouseY;
-        ember.classList.add('is-active');
-        if (trailEl) trailEl.classList.add('is-active');
+      px = e.clientX;
+      py = e.clientY;
+      if (!shown) {
+        shown = true;
+        dot.classList.add('is-active');
+        if (ring) ring.classList.add('is-active');
+      }
+      if (!queued) {
+        queued = true;
+        requestAnimationFrame(paint);
       }
     }, { passive: true });
 
+    const HOVER = 'a, button, [role="button"], input, textarea, .plate, .dress__list li';
+    document.addEventListener('pointerover', (e) => {
+      if (e.target.closest(HOVER)) dot.classList.add('is-hover');
+    }, { passive: true });
+    document.addEventListener('pointerout', (e) => {
+      if (e.target.closest(HOVER)) dot.classList.remove('is-hover');
+    }, { passive: true });
+
     document.addEventListener('pointerleave', () => {
-      ember.style.opacity = '0';
-      if (trailEl) trailEl.style.opacity = '0';
+      dot.style.opacity = '0';
+      if (ring) ring.style.opacity = '0';
     });
     document.addEventListener('pointerenter', () => {
-      ember.style.opacity = '';
-      if (trailEl) trailEl.style.opacity = '';
+      dot.style.opacity = '';
+      if (ring) ring.style.opacity = '';
     });
-
-    const HOVER_SELECTOR = 'a, button, [role="button"], input, textarea, .plate, .dress__list li';
-    document.addEventListener('pointerover', (e) => {
-      if (e.target.closest(HOVER_SELECTOR)) ember.classList.add('is-hover');
-    });
-    document.addEventListener('pointerout', (e) => {
-      if (e.target.closest(HOVER_SELECTOR)) ember.classList.remove('is-hover');
-    });
-
-    function loop() {
-      dotX += (mouseX - dotX) * 0.42;
-      dotY += (mouseY - dotY) * 0.42;
-      ringX += (mouseX - ringX) * 0.12;
-      ringY += (mouseY - ringY) * 0.12;
-
-      ember.style.transform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%)`;
-      if (trailEl) {
-        trailEl.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
-      }
-      requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
   })();
 
   /* ======================================================================
-     4. CAULDRON GADGET — ink ripples + ember burst
+     4. CAULDRON — ink ripples + ember burst
      ====================================================================== */
   (() => {
     const cauldron = $('#cauldronBtn');
     const rippleLayer = $('#rippleLayer');
     if (!cauldron || !rippleLayer) return;
 
-    const EMBERS = [
-      { r: 255, g: 120, b: 60 },
-      { r: 220, g: 60, b: 50 },
-      { r: 236, g: 229, b: 214 },
-      { r: 201, g: 162, b: 39 }
-    ];
-
-    let stirCount = 0;
+    let stirs = 0;
 
     cauldron.addEventListener('click', (e) => {
-      stirCount += 1;
+      stirs += 1;
       const rect = cauldron.getBoundingClientRect();
       const cx = e.clientX || rect.left + rect.width / 2;
       const cy = e.clientY || rect.top + rect.height / 2;
@@ -341,9 +398,10 @@
       void cauldron.offsetWidth;
       cauldron.classList.add('is-stirring');
 
-      ParticleField.burst(cx, cy, { count: 44, colors: EMBERS });
+      Dust.burst(cx, cy, { count: 40 });
 
-      for (let i = 0; i < 3; i++) {
+      const rings = lowEnd ? 2 : 3;
+      for (let i = 0; i < rings; i++) {
         window.setTimeout(() => {
           const ring = document.createElement('span');
           ring.className = 'ripple' + (i % 2 ? ' ripple--alt' : '');
@@ -354,12 +412,12 @@
         }, i * 130);
       }
 
-      cauldron.setAttribute('aria-label', `Stir the cauldron again (stirred ${stirCount} times)`);
+      cauldron.setAttribute('aria-label', `Stir the cauldron again (stirred ${stirs} times)`);
     });
   })();
 
   /* ======================================================================
-     5. SCROLL REVEALS + PROGRESS + STICKY HEADER + HERO PARALLAX
+     5. REVEALS · SCROLL PROGRESS · STICKY HEADER · HERO PARALLAX · NAV STATE
      ====================================================================== */
   (() => {
     const revealEls = $$('.reveal');
@@ -369,45 +427,70 @@
       revealEls.forEach((el) => {
         const parent = el.parentElement;
         const index = groups.get(parent) || 0;
-        el.style.transitionDelay = Math.min(index * 90, 400) + 'ms';
+        el.style.transitionDelay = Math.min(index * 80, 360) + 'ms';
         groups.set(parent, index + 1);
       });
 
       const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
-            window.setTimeout(() => { entry.target.style.transitionDelay = '0ms'; }, 1300);
-          }
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+          window.setTimeout(() => { entry.target.style.transitionDelay = '0ms'; }, 1200);
         });
-      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+      }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
 
       revealEls.forEach((el) => observer.observe(el));
     } else {
       revealEls.forEach((el) => el.classList.add('is-visible'));
     }
 
+    /* Active nav link */
+    const navLinks = $$('.site-nav a[href^="#"]');
+    const sections = navLinks
+      .map((a) => document.querySelector(a.getAttribute('href')))
+      .filter(Boolean);
+
+    if (navLinks.length && sections.length && 'IntersectionObserver' in window) {
+      const navObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const id = '#' + entry.target.id;
+          navLinks.forEach((a) => a.classList.toggle('is-active', a.getAttribute('href') === id));
+        });
+      }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+      sections.forEach((s) => navObserver.observe(s));
+    }
+
     const bar = $('#scrollBar');
     const header = $('.site-header');
     const heroImg = $('.hero__img');
+    const heroSection = $('.hero');
     let ticking = false;
+    let lastY = 0;
 
     function onScroll() {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      ticking = false;
+      const y = window.scrollY || document.documentElement.scrollTop;
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
 
-      if (bar) bar.style.width = clamp((scrollTop / (docHeight || 1)) * 100, 0, 100) + '%';
-      if (header) header.classList.toggle('is-stuck', scrollTop > 24);
+      if (bar) bar.style.width = clamp((y / (docH || 1)) * 100, 0, 100) + '%';
 
-      if (heroImg && !reduceMotion && scrollTop < window.innerHeight * 1.2) {
-        if (scrollTop > 4) {
-          heroImg.style.transform = `scale(1.06) translate3d(0, ${(scrollTop * 0.12).toFixed(1)}px, 0)`;
-        } else {
-          heroImg.style.transform = '';
+      const stuck = y > 24;
+      if (header && header.classList.contains('is-stuck') !== stuck) {
+        header.classList.toggle('is-stuck', stuck);
+      }
+
+      // Parallax only while the hero is on screen, and only on capable devices
+      if (heroImg && heroSection && !reduceMotion && !lowEnd) {
+        const heroBottom = heroSection.offsetHeight;
+        if (y <= heroBottom) {
+          heroImg.style.transform = y > 4
+            ? `scale(1.06) translate3d(0, ${(y * 0.12).toFixed(1)}px, 0)`
+            : '';
         }
       }
-      ticking = false;
+      lastY = y;
     }
 
     window.addEventListener('scroll', () => {
@@ -421,13 +504,30 @@
   })();
 
   /* ======================================================================
-     6. EMOJI CONFETTI — 🦇 🎃 👻 💀
+     6. EMOJI CONFETTI — rasterised once, blitted per frame
      ====================================================================== */
   const Confetti = (() => {
+    const GLYPH_SIZE = 64;
+    const cache = new Map();
     let canvas = null;
     let ctx = null;
     let particles = [];
     let rafId = null;
+    let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
+    function glyphSprite(glyph) {
+      if (cache.has(glyph)) return cache.get(glyph);
+      const c = document.createElement('canvas');
+      c.width = c.height = GLYPH_SIZE;
+      const g = c.getContext('2d');
+      if (!g) return null;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.font = `${GLYPH_SIZE * 0.82}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+      g.fillText(glyph, GLYPH_SIZE / 2, GLYPH_SIZE / 2 + 2);
+      cache.set(glyph, c);
+      return c;
+    }
 
     function ensureCanvas() {
       if (!canvas) {
@@ -435,19 +535,20 @@
         canvas.className = 'confetti-canvas';
         canvas.setAttribute('aria-hidden', 'true');
         document.body.appendChild(canvas);
-        ctx = canvas.getContext('2d');
+        ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
         if (!ctx) {
           canvas.remove();
           canvas = null;
-          return;
+          return false;
         }
       }
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.floor(window.innerWidth * dpr);
       canvas.height = Math.floor(window.innerHeight * dpr);
       canvas.style.width = window.innerWidth + 'px';
       canvas.style.height = window.innerHeight + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return true;
     }
 
     function spawn(options = {}) {
@@ -459,41 +560,44 @@
         spread = 1
       } = options;
 
-      ensureCanvas();
-      if (!ctx) return;
-
+      if (!ensureCanvas()) return;
       const ox = window.innerWidth * originX;
       const oy = window.innerHeight * originY;
+      const total = Math.round(count * (lowEnd ? 0.55 : 1));
 
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < total; i++) {
+        const glyph = emojis[randInt(0, emojis.length - 1)];
+        const sprite = glyphSprite(glyph);
+        if (!sprite) continue;
         const angle = rand(-Math.PI * 0.92, -Math.PI * 0.08);
         const speed = rand(6, 16) * spread;
         particles.push({
-          x: ox + rand(-36, 36),
-          y: oy + rand(-26, 26),
+          x: ox + rand(-32, 32),
+          y: oy + rand(-24, 24),
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          gravity: rand(0.16, 0.3),
-          drag: rand(0.985, 0.996),
-          size: rand(15, 34),
+          gravity: rand(0.17, 0.3),
+          drag: rand(0.986, 0.996),
+          size: rand(15, 32),
           rot: rand(0, Math.PI * 2),
-          vrot: rand(-0.16, 0.16),
-          glyph: emojis[randInt(0, emojis.length - 1)],
+          vrot: rand(-0.15, 0.15),
+          sprite,
           life: 1,
-          decay: rand(0.0035, 0.0075),
+          decay: rand(0.0035, 0.0072),
           wobble: rand(0, Math.PI * 2),
           wobbleSpeed: rand(0.02, 0.06)
         });
       }
 
+      if (particles.length > 220) particles = particles.slice(-220);
       if (!rafId) rafId = requestAnimationFrame(render);
     }
 
     function render() {
       if (!ctx || !canvas) return;
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      ctx.clearRect(0, 0, w, h);
 
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
@@ -506,32 +610,33 @@
         p.rot += p.vrot;
         p.life -= p.decay;
 
-        if (p.life <= 0 || p.y > window.innerHeight + 120) {
+        if (p.life <= 0 || p.y > h + 100) {
           particles.splice(i, 1);
           continue;
         }
 
-        ctx.save();
         ctx.globalAlpha = clamp(p.life * 1.6, 0, 1);
+        ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
-        ctx.font = `${p.size}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-        ctx.fillText(p.glyph, 0, 0);
+        ctx.drawImage(p.sprite, -p.size / 2, -p.size / 2, p.size, p.size);
         ctx.restore();
       }
+
+      ctx.globalAlpha = 1;
 
       if (particles.length) {
         rafId = requestAnimationFrame(render);
       } else {
         cancelAnimationFrame(rafId);
         rafId = null;
-        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        ctx.clearRect(0, 0, w, h);
       }
     }
 
     window.addEventListener('resize', () => {
       if (canvas && particles.length) ensureCanvas();
-    });
+    }, { passive: true });
 
     return { spawn };
   })();
@@ -541,8 +646,9 @@
      ====================================================================== */
   window.HallowFX = {
     confetti: Confetti.spawn,
-    burst: ParticleField.burst,
+    burst: Dust.burst,
     reducedMotion: reduceMotion,
+    lowEnd,
     emojis: ['🦇', '🎃', '👻', '💀']
   };
 })();

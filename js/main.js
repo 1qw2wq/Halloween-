@@ -412,9 +412,19 @@
   (() => {
     const toggle = $('#navToggle');
     const menu = $('#mobileMenu');
+    const header = $('.site-header');
     if (!toggle || !menu) return;
 
+    /* The sticky header shrinks on scroll and sits below the top bar at rest, so
+       anchor the dropdown to the header's live bottom edge instead of guessing. */
+    function positionMenu() {
+      if (!header) return;
+      const bottom = Math.round(header.getBoundingClientRect().bottom);
+      menu.style.top = Math.max(0, bottom + 8) + 'px';
+    }
+
     function setOpen(open) {
+      if (open) positionMenu();
       toggle.classList.toggle('is-open', open);
       menu.classList.toggle('is-open', open);
       toggle.setAttribute('aria-expanded', String(open));
@@ -439,7 +449,12 @@
 
     window.addEventListener('resize', () => {
       if (window.innerWidth > 860) setOpen(false);
-    });
+      else if (menu.classList.contains('is-open')) positionMenu();
+    }, { passive: true });
+
+    window.addEventListener('scroll', () => {
+      if (menu.classList.contains('is-open')) positionMenu();
+    }, { passive: true });
   })();
 
   /* ------------------------------------------------------------------ *

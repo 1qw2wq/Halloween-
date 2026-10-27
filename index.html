@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>A Night of Frights &amp; Delights · Halloween MMXXVI</title>
   <meta name="description" content="Step into our haunt if you dare. A Night of Frights &amp; Delights — the ultimate Halloween gathering. October 31st, 18:00. Witches' kitchen, pumpkin pie crafting, haunted game night." />
   <meta name="theme-color" content="#08080b" />
@@ -36,9 +36,8 @@
   <link rel="manifest" href="/site.webmanifest" />
 
   <!-- Typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="preload" href="/assets/fonts/playfair-display-var.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/lora-var.woff2" as="font" type="font/woff2" crossorigin />
 
   <!-- Above-the-fold artwork -->
   <link rel="preload" as="image" href="/assets/hero-haunt.jpg" fetchpriority="high" />
@@ -111,7 +110,7 @@
 
         <h1 id="heroTitle" class="hero__title reveal">
           <span class="hero__title-line">A night of</span>
-          <span class="hero__title-big">Frights <em>&amp;</em> Delights</span>
+          <span class="hero__title-big">Frights <em>&amp;</em><br />Delights</span>
           <span class="hero__title-rule" aria-hidden="true">✦</span>
           <span class="hero__title-sub">The Ultimate Halloween Gathering</span>
         </h1>
@@ -171,10 +170,12 @@
 
     <!-- ================= RITES ================= -->
     <section class="section section--rites" id="rituals" aria-labelledby="ritualsTitle">
-      <header class="section__head">
-        <p class="kicker reveal"><span aria-hidden="true">—</span> Chapter I</p>
-        <h2 class="section__title reveal" id="ritualsTitle">Three Rites<br />Await the Brave</h2>
-        <p class="section__lead reveal">Bring your appetite, your carving knife, and your worst losing face. The evening is divided into three unholy rituals.</p>
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker reveal"><span aria-hidden="true">—</span> Chapter I</p>
+          <h2 class="section__title reveal" id="ritualsTitle">Three Rites<br />Await the Brave</h2>
+        </div>
+        <p class="section__lead reveal">Bring your appetite, your carving knife, and your worst losing face. The evening is divided into three unholy rituals, served in no sensible order.</p>
       </header>
 
       <div class="plates">

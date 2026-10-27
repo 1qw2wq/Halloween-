@@ -46,7 +46,8 @@ Then open <http://localhost:8000>.
     ├── velvet.jpg           # Crushed-velvet texture (dress-code panel)
     ├── surprise.jpg         # The "YOU'RE TRAPPED!" portrait
     ├── og-image.jpg         # 1200×630 social preview card
-    └── favicon.ico / .png, apple-touch-icon.png
+    ├── favicon.ico / .png, apple-touch-icon.png
+    └── fonts/               # Self-hosted variable woff2 (152 KB, latin subset)
 ```
 
 ---
@@ -96,10 +97,10 @@ swap the string):
 - [x] All asset paths root-relative (`/assets/…`, `/css/…`, `/js/…`) so clean URLs and
       `404.html` resolve correctly
 - [x] HTTPS by default on Vercel — the clipboard API requires a secure context
-- [x] CSP allows only `self` + Google Fonts; no inline scripts or styles to whitelist
+- [x] CSP allows only `self` (fonts are self-hosted); no inline scripts or styles to whitelist
 - [x] `frame-ancestors *` so the invitation can still be embedded in a preview iframe
 - [x] Custom 404, favicon (`.ico` + PNG + Apple touch icon), 1200×630 OG image
-- [x] Total deploy weight ≈ 1.1 MB
+- [x] Total deploy weight ≈ 1.3 MB
 
 
 ---
@@ -112,13 +113,62 @@ swap the string):
 | `#b3121f` / `#d8202b` | Blood — rules, stamps, the primary CTA |
 | `#ece5d6` | Bone — type and hairlines |
 | `#c9a227` | Brass — occasional accents |
-| **Bebas Neue** | Playbill headlines, always uppercase and tight |
-| **Lora** | Body copy, ledgers and captions |
-| **Caveat** | Handwritten margin notes |
+| **Playfair Display** | Playbill headlines — a high-contrast didone, 700–900 |
+| **Lora** | Body copy, ledgers, small caps labels and captions |
+| **Caveat** | Handwritten margin notes, the script ampersand |
 
 Deliberately absent: rounded cards, glassmorphism, drop-shadowed pills and neon glows.
 Frames are square, buttons are rectangles or clipped blocks, and every surface carries a
 fine film grain so nothing looks like a flat web gradient.
+
+---
+
+## 🔤 Type
+
+Self-hosted **variable** woff2 files (no Google Fonts request, no render-blocking
+third-party hop), subset to Latin‑1 + typographic punctuation and served from `/assets/fonts`:
+
+| File | Weight axis | Size |
+|---|---|---|
+| `playfair-display-var.woff2` | 400–900 | 29 KB |
+| `lora-var.woff2` | 400–700 | 31 KB |
+| `lora-italic-var.woff2` | 400–700 italic | 34 KB |
+| `caveat-var.woff2` | pinned at 500 | 46 KB |
+
+The two above-the-fold faces are `<link rel="preload">`ed, everything uses
+`font-display: swap`, and `font-synthesis-weight: none` stops the browser faking
+weights the variable fonts already provide.
+
+## 📱 Mobile
+
+- Breakpoint system: **1080** (ticket/haunt stack) · **960** (plates → panels) ·
+  **860** (nav collapses, header goes opaque) · **720** (phone) · **420** (small phone)
+  plus landscape-phone and short-viewport rules.
+- `viewport-fit=cover` with `env(safe-area-inset-*)` on the header, sections, cauldron
+  and toast, so nothing hides under a notch or home indicator.
+- The masthead is set on two intentional lines; headline sizes were checked against real
+  Playfair advance widths so the widest line fits from **320 px** up without overflow.
+- 44 px minimum tap targets (`48 px` for buttons), hover-only effects disabled under
+  `@media (hover: none)`, ledger and ticket layouts reflow to single columns.
+
+## ⚡ Particle performance
+
+The first version re-created a radial gradient for every particle on every frame — the
+single biggest cost in the whole page. It now works like this:
+
+| Before | After |
+|---|---|
+| `createRadialGradient()` per particle per frame (~2,400/s) | **4 gradients total**, baked once into sprite canvases |
+| Gradient fill per particle | `drawImage()` blits of one shared sprite |
+| DPR 2 canvas (4× the fill rate) | DPR capped at **1.5** (1 on low-end/mobile) |
+| Uncapped 60 fps ambient loop | **30 fps** cap (24 on low-end) — dust drifts, nobody notices |
+| Second rAF loop clearing a full-screen cursor canvas | **No loop at all**: cursor is DOM + a CSS transition |
+| Emoji confetti laid out with `fillText` per particle per frame | Glyphs **rasterised once**, then blitted |
+| `filter: blur(38px)` on a full-viewport fixed layer | Pre-softened gradients, no filter |
+| — | **Watchdog** samples frame times and steps quality down automatically |
+
+Everything pauses on `visibilitychange`, the canvas is capped and resized on a debounce,
+and listeners are passive.
 
 ---
 
