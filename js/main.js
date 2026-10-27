@@ -74,7 +74,7 @@
         setUnit('seconds', 0);
         root.setAttribute('aria-label', 'The haunting has begun. Happy Halloween!');
         const until = $('.countdown__until', root);
-        if (until) until.innerHTML = 'The veil is open — <strong>the haunt has begun 🎃</strong>';
+        if (until) until.innerHTML = 'The veil is open — <strong>the haunt has begun</strong>';
         if (intervalId) clearInterval(intervalId);
         return;
       }
@@ -177,7 +177,7 @@
       const ok = await writeToClipboard(address);
 
       if (ok) {
-        Toast.show('Address copied to clipboard! 🦇', '🦇');
+        Toast.show('Address copied to clipboard! 🦇', '✦');
         celebrate(button);
         if (!reduceMotion) {
           const rect = button.getBoundingClientRect();
@@ -190,7 +190,7 @@
           });
         }
       } else {
-        Toast.show('Could not copy — address: ' + address, '⚠️');
+        Toast.show('Could not copy — address: ' + address, '!');
         if (addressEl) {
           const range = document.createRange();
           range.selectNodeContents(addressEl);
@@ -399,9 +399,9 @@
         link.click();
         document.body.removeChild(link);
         window.setTimeout(() => URL.revokeObjectURL(url), 1500);
-        Toast.show('Calendar invite saved — see you there! 🎃', '📅');
+        Toast.show('Calendar invite saved — see you there!', '✦');
       } catch (err) {
-        Toast.show('Save it the old way: Oct 31, 18:00 🕛', '📅');
+        Toast.show('Save it the old way: Oct 31, 18:00', '✦');
       }
     });
   })();

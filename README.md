@@ -1,7 +1,7 @@
 # 🎃 A Night of Frights &amp; Delights
 
-A spooky-luxury Halloween party invitation — dark obsidian, neon pumpkin, eerie green,
-ambient fog, floating ghosts, and one very rude surprise.
+A Halloween party invitation styled like a Victorian theatre playbill — midnight ink,
+blood-red rules, velvet curtains and candlelit photography.
 
 Pure static HTML/CSS/JS. **No build step, no npm install, no backend.**
 
@@ -31,14 +31,37 @@ Then open <http://localhost:8000>.
 ```
 ├── index.html          # Semantic layout + modal markup
 ├── css/
-│   └── style.css       # Theme tokens, glass/gothic cards, keyframes, responsive rules
+│   └── style.css       # Design tokens, plates, playbill frames, keyframes, responsive
 ├── js/
-│   ├── animations.js   # Canvas particles, floating sprites, custom cursor, confetti
+│   ├── animations.js   # Dust canvas, drifting bats & mist, cursor, ember burst, confetti
 │   └── main.js         # Countdown, copy-to-clipboard, surprise modal, calendar file
 └── assets/
-    ├── haunt.jpg       # Hero backdrop (haunted mansion + moon)
-    └── surprise.jpg    # The "YOU'RE TRAPPED!" portrait
+    ├── hero-haunt.jpg       # Curtained, moonlit manor (hero + RSVP backdrop)
+    ├── haunt.jpg            # Moonlit mansion with the pumpkin path
+    ├── ritual-kitchen.jpg   # Witches' Kitchen plate
+    ├── ritual-pie.jpg       # Pumpkin Pie Crafting plate
+    ├── ritual-games.jpg     # Haunted Game Night plate
+    ├── velvet.jpg           # Crushed-velvet texture (dress-code panel)
+    └── surprise.jpg         # The "YOU'RE TRAPPED!" portrait
 ```
+
+---
+
+## 🎨 Design language
+
+| Token | Role |
+|---|---|
+| `#08080b` | Ink — page ground |
+| `#b3121f` / `#d8202b` | Blood — rules, stamps, the primary CTA |
+| `#ece5d6` | Bone — type and hairlines |
+| `#c9a227` | Brass — occasional accents |
+| **Bebas Neue** | Playbill headlines, always uppercase and tight |
+| **Lora** | Body copy, ledgers and captions |
+| **Caveat** | Handwritten margin notes |
+
+Deliberately absent: rounded cards, glassmorphism, drop-shadowed pills and neon glows.
+Frames are square, buttons are rectangles or clipped blocks, and every surface carries a
+fine film grain so nothing looks like a flat web gradient.
 
 ---
 
@@ -55,27 +78,30 @@ Then open <http://localhost:8000>.
 
 ## 🕯️ What's interactive
 
-- **Live countdown** — counts to the next Oct 31 · 18:00 in the visitor's local timezone.
-- **Copy Address** — one tap copies the full address; toast confirms with a bat 🦇.
-- **"I Dare to Enter" / "Accept Invitation"** — red lightning flash, screen shake, then the
-  surprise modal drops in: glitch portrait, animated *YOU'RE TRAPPED! 🎃*, and an
-  exploding 🦇 🎃 👻 💀 emoji-confetti burst. Escape with `✕`, the backdrop, or the Esc key.
+- **Live countdown** — counts to the next Oct 31 · 18:00 in the visitor's local timezone,
+  set as a hairline ledger strip rather than a floating pill.
+- **Copy Address** — one tap copies the full address; a toast confirms with a bat 🦇.
+- **"I Dare to Enter" / "Accept Invitation"** — red lightning flash, screen shake, then a
+  framed surprise panel: glitch portrait, *YOU'RE TRAPPED! 🎃*, and an exploding
+  🦇 🎃 👻 💀 emoji-confetti burst. Escape with `✕`, the backdrop, or the Esc key.
 - **Save the date** — generates a real `.ics` calendar invite (with a 2-hour reminder)
   entirely in the browser.
-- **Floating cauldron** — click it for concentric neon ripples and a particle burst.
-- **Ambient layers** — rising embers/spores, drifting fog, bats, ghosts and mini
-  jack-o'-lanterns crossing the screen.
-- **Custom cursor** — a glowing ember with a ghostly ember trail (desktop only).
-- **Neon cards** — cursor-tracked spotlight glow and lift on hover.
+- **Floating cauldron** — click it for ink ripples and an ember burst.
+- **Ambient layers** — fine dust motes catching candlelight, drifting mist, sparse bat
+  silhouettes.
+- **Custom cursor** — a fine point with a slow trailing ring (desktop only).
+- **Plates** — the three ritual cards lift, their numbering stamps fill with blood red, and
+  the photographs enlarge very slowly on hover.
 
 ---
 
 ## ♿ Accessibility &amp; performance notes
 
-- `prefers-reduced-motion` disables particles, sprites, shakes, confetti and parallax.
+- `prefers-reduced-motion` disables dust, sprites, shakes, confetti and parallax.
 - The modal traps focus, restores focus to the trigger, closes on `Esc`, and locks scroll.
 - Decorative art is `aria-hidden`; the countdown is a labelled live region.
-- Images are preloaded/dimensioned to avoid layout shift; the particle canvas caps DPR at 2.
+- Images are preloaded/dimensioned to avoid layout shift; the particle canvas caps DPR at 2
+  and the whole `assets/` folder stays under 1 MB.
 
 ---
 
@@ -84,5 +110,6 @@ Then open <http://localhost:8000>.
 - **Date/time** — `js/main.js` → `const PARTY = { day: 31, hour: 18, minute: 0, … }`.
 - **Address** — update the `<address>` text and the `data-address` attribute on
   `#copyAddressBtn` in `index.html` (keep them identical).
-- **Colours &amp; fonts** — edit the token block at the top of `css/style.css`.
-- **Images** — drop replacements into `assets/` with the same filenames.
+- **Colours &amp; type** — edit the token block at the top of `css/style.css`.
+- **Photography** — replace the files in `assets/` with the same filenames; the layout
+  crops them to 4:5 (plates) and 16:9 (hero) automatically.
