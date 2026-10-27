@@ -32,6 +32,8 @@ Then open <http://localhost:8000>.
 ├── index.html          # Semantic layout + modal markup
 ├── css/
 │   └── style.css       # Design tokens, plates, playbill frames, keyframes, responsive
+├── 404.html            # Styled not-found page
+├── vercel.json         # Clean URLs, headers, caching (deployment ready)
 ├── js/
 │   ├── animations.js   # Dust canvas, drifting bats & mist, cursor, ember burst, confetti
 │   └── main.js         # Countdown, copy-to-clipboard, surprise modal, calendar file
@@ -42,8 +44,63 @@ Then open <http://localhost:8000>.
     ├── ritual-pie.jpg       # Pumpkin Pie Crafting plate
     ├── ritual-games.jpg     # Haunted Game Night plate
     ├── velvet.jpg           # Crushed-velvet texture (dress-code panel)
-    └── surprise.jpg         # The "YOU'RE TRAPPED!" portrait
+    ├── surprise.jpg         # The "YOU'RE TRAPPED!" portrait
+    ├── og-image.jpg         # 1200×630 social preview card
+    └── favicon.ico / .png, apple-touch-icon.png
 ```
+
+---
+
+## 🚀 Deploy to Vercel
+
+This is a **zero-config static site** — Vercel detects plain HTML and ships it with no build
+step. Everything needed is already in the repo:
+
+| File | Purpose |
+|---|---|
+| `vercel.json` | Clean URLs, `/favicon.ico` rewrite, security headers (CSP), cache policy |
+| `404.html` | Styled "Lost in the Dark" not-found page (Vercel serves it automatically) |
+| `robots.txt` · `sitemap.xml` | Crawler hints |
+| `site.webmanifest` | Installable-app metadata + icons |
+| `.vercelignore` | Keeps the deploy bundle to page assets only |
+| `.gitignore` | Excludes `node_modules/`, `.vercel/`, local env files |
+
+### Option A — dashboard (recommended)
+
+1. Push this branch and merge the pull request into `main`.
+2. In Vercel: **Add New → Project → Import** the `1qw2wq/Halloween-` repository.
+3. Framework preset **Other**, Build Command **empty**, Output Directory **empty** (root).
+4. **Deploy**. Every later push to `main` redeploys; pull requests get preview URLs.
+
+### Option B — CLI
+
+```bash
+npm i -g vercel
+vercel            # preview deployment
+vercel --prod     # production deployment
+```
+
+### After the first deploy
+
+Replace the placeholder domain `https://halloween-frights.vercel.app` in four places so
+link previews and crawlers point at your real URL (or just attach the custom domain and
+swap the string):
+
+- `index.html` → `og:url`, `og:image`, `twitter:image`
+- `robots.txt` → `Sitemap:`
+- `sitemap.xml` → `<loc>`
+
+### Deploy checklist
+
+- [x] No build command, no dependencies, no server code
+- [x] All asset paths root-relative (`/assets/…`, `/css/…`, `/js/…`) so clean URLs and
+      `404.html` resolve correctly
+- [x] HTTPS by default on Vercel — the clipboard API requires a secure context
+- [x] CSP allows only `self` + Google Fonts; no inline scripts or styles to whitelist
+- [x] `frame-ancestors *` so the invitation can still be embedded in a preview iframe
+- [x] Custom 404, favicon (`.ico` + PNG + Apple touch icon), 1200×630 OG image
+- [x] Total deploy weight ≈ 1.1 MB
+
 
 ---
 
