@@ -10,9 +10,9 @@ backend, no framework.
 |---|---|
 | **Event** | October 31st · 15:00 (live countdown) |
 | **Venue** | 杭州市富阳区九龙大道108号野风山城锦庐13-7 |
-| **Stack** | HTML + CSS + vanilla JS · three self-hosted variable fonts · one dust `<canvas>` |
+| **Stack** | HTML + CSS + vanilla JS · three self-hosted variable fonts · one dust `<canvas>` · Web Audio sound (no audio files) |
 | **Host** | Vercel — static, zero-config, served from the repo root |
-| **Weight** | ≈ 1.27 MB on disk · ≈ 28 KB of gzipped HTML + CSS + JS |
+| **Weight** | ≈ 1.40 MB on disk · ≈ 39 KB of gzipped HTML + CSS + JS |
 
 ---
 
@@ -24,11 +24,12 @@ backend, no framework.
 4. [Design language](#-design-language)
 5. [Typography](#-typography)
 6. [Responsive &amp; mobile](#-responsive--mobile)
-7. [Performance](#-performance)
-8. [The party &amp; what's interactive](#-the-party)
-9. [Accessibility &amp; browser support](#-accessibility--browser-support)
-10. [Customising](#-customising)
-11. [Project status &amp; credits](#-project-status--credits)
+7. [Sound](#-sound)
+8. [Performance](#-performance)
+9. [The party &amp; what's interactive](#-the-party)
+10. [Accessibility &amp; browser support](#-accessibility--browser-support)
+11. [Customising](#-customising)
+12. [Project status &amp; credits](#-project-status--credits)
 
 ---
 
@@ -68,8 +69,9 @@ vercel dev
 │   ├── style.css           # Tokens, @font-face, plates, frames, keyframes, responsive
 │   └── no-js.css           # Only loaded via <noscript>, keeps content visible without JS
 ├── js/
-│   ├── animations.js       # Dust canvas, bats & mist, cursor, ember burst, confetti
-│   └── main.js             # Countdown, clipboard, surprise modal, .ics, nav
+│   ├── audio.js            # Web Audio cue sheet + the header mute toggle
+│   ├── animations.js       # Dust canvas, bats & mist, cursor, ember burst, confetti, cauldron
+│   └── main.js             # Countdown, clipboard, surprise modal, .ics, nav, click sounds
 ├── assets/
 │   ├── hero-haunt.jpg      # Curtained moonlit manor (hero + RSVP backdrop)
 │   ├── haunt.jpg           # Moonlit mansion with the pumpkin path
@@ -237,6 +239,41 @@ browser faking weights the variable files already contain.
 
 ---
 
+## 🔊 Sound
+
+There is **not a single audio file** in this project. Every sound is synthesized at runtime
+with the Web Audio API — oscillators, shaped noise and one generated plate reverb — so the
+soundscape costs nothing to download, needs no licence, and cannot break the `'self'`-only CSP.
+
+| Cue | What you hear | Fires on |
+|---|---|---|
+| `click` | a dry wooden knock | buttons, nav links, the menu toggle |
+| `hover` | a barely-there breath | pointer hover on links (fine pointers only) |
+| `thunder` | crack, sub thump and a 1.5 s rumble | the lightning flash when the modal opens |
+| `scare` | a wobbling shriek over a B/C/E minor-second cluster | the panel landing, 240 ms later |
+| `whoosh` | noise sweeping down | closing the modal |
+| `chime` | a small two-partial bell | every toast |
+| `sparkle` | a rising E-minor arpeggio | cauldron milestones (stirs 3 / 7 / 13) |
+| `stir` | a plop, a gurgle and rising bubbles | every cauldron stir — denser when the stir is big, and the brew rises in pitch as you keep going |
+| `tick` | a soft two-note blip | muting / unmuting |
+
+How it behaves:
+
+- **Nothing autoplays.** The audio context is only created on the first `pointerdown`,
+  `keydown` or `touchstart` (capture phase, so the first click already has sound), which is
+  also what keeps the console free of autoplay-policy warnings.
+- **A mute toggle** in the header (three equaliser bars, struck through when off) persists
+  the choice in `localStorage`. It only appears once `js/audio.js` has confirmed Web Audio
+  support, so a browser without it never sees a dead button — the module degrades to a
+  silent no-op API and the page is unaffected.
+- **Bounded.** Cues share one compressor and a voice budget of 64 nodes, and every voice is
+  released on `ended` **and** on a backstop timer, so a suspended context can never leak the
+  budget and quietly silence the page. Nothing sounds from a hidden tab.
+- **Layered, not stacked.** The modal's own buttons play only their own cues; a generic click
+  is suppressed there so the sting isn't muddied.
+
+---
+
 ## ⚡ Performance
 
 ### Particles
@@ -262,13 +299,15 @@ listeners are passive.
 
 | Asset | Raw | Gzipped |
 |---|---|---|
-| `index.html` | 19.5 KB | 5.3 KB |
-| `css/style.css` | 52.2 KB | 11.6 KB |
-| `js/animations.js` + `js/main.js` | 38.3 KB | 11.1 KB |
+| `index.html` | 22.9 KB | 6.2 KB |
+| `css/style.css` | 61.2 KB | 13.5 KB |
+| `js/animations.js` + `js/main.js` | 48.1 KB | 14.8 KB |
+| `js/audio.js` — the whole soundscape, synthesized | 15.1 KB | 4.7 KB |
+| **Audio files** | **0 KB** | **0 KB** |
 | Fonts (4 × woff2) | 140.3 KB | — |
-| 6 photographs (hero eager, rest lazy) | 0.84 MB | — |
+| 7 photographs (hero eager, rest lazy) | 0.93 MB | — |
 | Velvet texture + OG card | 0.11 MB | — |
-| **Total** | **≈ 1.27 MB** | **≈ 28 KB of text** |
+| **Total** | **≈ 1.40 MB** | **≈ 39 KB of text** |
 
 Images are dimensioned in markup (no layout shift), the hero is preloaded with
 `fetchpriority="high"`, and every other photograph is `loading="lazy"`.
@@ -309,6 +348,8 @@ Images are dimensioned in markup (no layout shift), the hero is preloaded with
   very slowly on hover.
 - **Nav** — active-section indicator, sticky header, mobile dropdown anchored to the
   header's measured edge.
+- **Sound** — knock, thunder, the scare sting, the cauldron's gurgle and the toast bell are
+  all synthesized in-browser; a mute toggle sits in the header. See [Sound](#-sound).
 
 ---
 
@@ -318,6 +359,10 @@ Images are dimensioned in markup (no layout shift), the hero is preloaded with
   scroll-reveal transitions.
 - The modal traps focus, restores it to the trigger, closes on `Esc`, and locks background
   scroll; content self-reveals if JavaScript fails.
+- Audio is **off until you interact**, can be muted from the header at any time (the choice
+  is remembered), and every cue is decorative — no information is carried by sound alone.
+  The toggle is a real `<button>` with `aria-pressed` and a label that flips between
+  *Mute* and *Unmute*.
 - Decorative art is `aria-hidden`; the countdown is a labelled live region; the layout uses
   one `h1` with a logical heading order.
 - Modern evergreen browsers are the target (CSS custom properties, `clamp()`,
@@ -325,7 +370,12 @@ Images are dimensioned in markup (no layout shift), the hero is preloaded with
   `desynchronized` canvases and `backdrop-filter` degrade silently where unsupported.
 - **How it was verified:** behaviour (countdown maths, clipboard payload, modal open/close,
   focus trap, `Esc`, scroll lock, nav, cauldron) is covered by a jsdom harness that also
-  instruments the canvas to assert zero per-frame gradient allocations. Layout, mobile
+  instruments the canvas to assert zero per-frame gradient allocations. The audio module has
+  its own harness with a stubbed Web Audio graph: it renders all nine cues against the real
+  node API (asserting every scheduled value is finite and every exponential ramp target is
+  positive), checks that the context is not built before a gesture, that muting silences and
+  persists, that each interaction fires the right cue, and that a browser without Web Audio
+  gets a no-op API and a hidden toggle. Layout, mobile
   reflow and font metrics were checked statically (real font advance widths, asset and CSS
   audits) — the build sandbox has no browser, so there are no screenshot regressions yet.
 - **Without JavaScript** the invitation still reads as a complete static page: a
@@ -345,6 +395,8 @@ Images are dimensioned in markup (no layout shift), the hero is preloaded with
 | **Photography** | replace files in `assets/` — the layout crops to 4:5 (plates), 16:9 (hero) and 1:1 (modal) automatically |
 | **Copy** | lives in `index.html`, except the toast messages, the "Copied!" button label, the countdown's post-deadline line, and the `.ics` summary/description in `js/main.js` |
 | **Social card** | replace `assets/og-image.jpg` (1200×630) |
+| **Sounds** | the `BANK` cue sheet in `js/audio.js` — add a cue, then call `window.HallowSfx.play('name')` |
+| **Default mute** | the `hallow:sound` key in `localStorage`, or flip the default in `readPref()` |
 
 ---
 

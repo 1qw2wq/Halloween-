@@ -526,6 +526,10 @@
       const milestone = MILESTONES[stirs] || null;
       const big = stirs % 3 === 0;
 
+      // The brew answers in sound as well as light (js/audio.js, if present).
+      const sfx = window.HallowSfx;
+      if (sfx) sfx.play('stir', { big, stirs });
+
       burstSparks(Math.round((big ? 16 : 10) * scale));
       riseEmbers(potX, potY, Math.round((big ? 16 : 10) * scale));
       wisps(potX, potY, lowEnd ? 1 : big ? 3 : 2);
@@ -547,7 +551,10 @@
       // incantation, or a milestone line instead
       window.setTimeout(() => charm(potX, potY), 120);
       if (milestone) {
-        window.setTimeout(() => notify(milestone, '✦'), 420);
+        window.setTimeout(() => {
+          notify(milestone, '✦');
+          if (sfx) sfx.play('sparkle');
+        }, 420);
         Confetti.spawn({ count: 26, originX: potX / window.innerWidth, originY: potY / window.innerHeight, spread: 0.8 });
       }
 

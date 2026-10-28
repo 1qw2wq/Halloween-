@@ -86,9 +86,18 @@
       <a href="#rsvp" class="site-nav__cta">R.S.V.P.</a>
     </nav>
 
-    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
-      <span></span><span></span><span></span>
-    </button>
+    <div class="header__tools">
+      <!-- Sound is synthesized in js/audio.js; this button only mutes it.
+           Hidden until that module confirms Web Audio support. -->
+      <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true" aria-label="Mute sound effects">
+        <span class="sound-toggle__bars" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="sound-toggle__slash" aria-hidden="true"></span>
+      </button>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </header>
 
   <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
@@ -460,6 +469,7 @@
     </div>
   </div>
 
+  <script src="/js/audio.js" defer></script>
   <script src="/js/animations.js" defer></script>
   <script src="/js/main.js" defer></script>
 </body>

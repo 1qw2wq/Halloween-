@@ -12,6 +12,8 @@
   const pad = (n) => String(n).padStart(2, '0');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const FX = window.HallowFX || { confetti: () => {}, burst: () => {} };
+  // js/audio.js is optional too — a silent page must still work.
+  const SFX = window.HallowSfx || { play: () => {} };
 
   const PARTY = {
     day: 31,
@@ -116,6 +118,7 @@
       if (msg) msg.textContent = message;
       if (icon && emoji) icon.textContent = emoji;
       el.classList.add('is-visible');
+      SFX.play('chime');
       window.clearTimeout(timer);
       timer = window.setTimeout(() => el.classList.remove('is-visible'), 3200);
     }
@@ -285,6 +288,7 @@
     }
 
     function zap() {
+      SFX.play('thunder');
       if (!lightning || reduceMotion) return;
       lightning.classList.remove('is-zap');
       void lightning.offsetWidth;
@@ -332,6 +336,7 @@
         lockScroll(true);
         if (closeBtn) closeBtn.focus({ preventScroll: true });
         isAnimating = false;
+        SFX.play('scare');
         throwConfetti();
       }, reduceMotion ? 0 : 240);
     }
@@ -339,6 +344,7 @@
     function close() {
       // ✕ or Esc during the lightning flash cancels the reveal entirely rather
       // than letting the queued timer pop the panel open afterwards.
+      if (modal.classList.contains('is-open') || pending) SFX.play('whoosh');
       const wasPending = pending;
       window.clearTimeout(openTimer);
       pending = false;
@@ -525,7 +531,39 @@
   })();
 
   /* ------------------------------------------------------------------ *
-   * 7. ODDS & ENDS
+   * 7. POINTER SOUNDS — one delegated pair of listeners for the whole page
+   * ------------------------------------------------------------------ */
+  (() => {
+    // The modal's own buttons have their own cues (thunder, sting, whoosh);
+    // the mute button plays its own tick inside js/audio.js.
+    const QUIET = '#soundToggle, [data-close-surprise], [data-open-surprise]';
+
+    document.addEventListener('click', (e) => {
+      const el = e.target.closest('.btn, .site-nav a, .mobile-menu a, .nav-toggle, .brand');
+      if (!el || el.matches(QUIET) || el.closest(QUIET)) return;
+      SFX.play('click');
+    });
+
+    // Hover ticks only where a real pointer exists, and never in a swarm.
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      let lastAt = 0;
+      let lastEl = null;
+
+      document.addEventListener('pointerover', (e) => {
+        const el = e.target.closest('a, button');
+        if (!el || el === lastEl) return;
+        if (el.matches(QUIET)) return;
+        const now = window.performance ? performance.now() : Date.now();
+        if (now - lastAt < 90) return;
+        lastAt = now;
+        lastEl = el;
+        SFX.play('hover');
+      });
+    }
+  })();
+
+  /* ------------------------------------------------------------------ *
+   * 8. ODDS & ENDS
    * ------------------------------------------------------------------ */
   const yearEl = $('#year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();

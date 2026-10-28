@@ -565,6 +565,70 @@ strong { font-weight: 600; color: #fff; }
 .nav-toggle.is-open span:nth-child(2) { opacity: 0; }
 .nav-toggle.is-open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
+/* ---------- sound toggle (revealed only if Web Audio exists) ---------- */
+.header__tools { display: flex; align-items: center; gap: 10px; }
+
+.sound-toggle {
+  position: relative;
+  display: none;                 /* js/audio.js adds .audio-ready to <html> */
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--rule);
+  color: var(--bone-dim);
+  cursor: pointer;
+  transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+.audio-ready .sound-toggle { display: inline-flex; }
+.sound-toggle:hover { color: var(--bone); border-color: var(--rule-strong); }
+.sound-toggle:focus-visible { outline: 1px solid var(--blood-lite); outline-offset: 2px; }
+
+.sound-toggle__bars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 13px;
+}
+.sound-toggle__bars i {
+  display: block;
+  width: 2px;
+  height: 100%;
+  background: currentColor;
+  transform-origin: center;
+  transition: height 0.3s var(--ease), opacity 0.3s ease;
+}
+.sound-toggle__bars i:nth-child(1) { animation: sound-bar 1.05s ease-in-out infinite; animation-delay: -0.2s; }
+.sound-toggle__bars i:nth-child(2) { animation: sound-bar 0.9s ease-in-out infinite; animation-delay: -0.55s; }
+.sound-toggle__bars i:nth-child(3) { animation: sound-bar 1.2s ease-in-out infinite; animation-delay: -0.8s; }
+
+.sound-toggle.is-off .sound-toggle__bars i { animation: none; height: 22%; opacity: 0.5; }
+
+/* the strike-through, drawn in rather than swapped in */
+.sound-toggle__slash {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 50%;
+  height: 1px;
+  background: var(--blood-lite);
+  transform: rotate(-42deg) scaleX(0);
+  transform-origin: center;
+  transition: transform 0.28s var(--ease);
+}
+.sound-toggle.is-off .sound-toggle__slash { transform: rotate(-42deg) scaleX(1); }
+
+@keyframes sound-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sound-toggle__bars i { animation: none; }
+  .sound-toggle__bars i:nth-child(2) { height: 68%; }
+  .sound-toggle__bars i:nth-child(3) { height: 42%; }
+}
+
 .mobile-menu {
   position: fixed;
   top: calc(var(--header-h) + 8px);
@@ -1952,6 +2016,7 @@ body.is-shaking { animation: screenShake 0.62s cubic-bezier(0.36, 0.07, 0.19, 0.
   .topbar { padding-left: max(var(--pad), env(safe-area-inset-left)); padding-right: max(var(--pad), env(safe-area-inset-right)); }
   .site-header { padding-left: max(var(--pad), env(safe-area-inset-left)); padding-right: max(var(--pad), env(safe-area-inset-right)); }
   .nav-toggle { width: 44px; height: 44px; }
+  .sound-toggle { width: 44px; height: 44px; }
 
   /* Plates stack vertically again, media on top */
   .plate { flex-direction: column; }
@@ -2055,6 +2120,7 @@ body.is-shaking { animation: screenShake 0.62s cubic-bezier(0.36, 0.07, 0.19, 0.
   .site-nav a,
   .mobile-menu a { min-height: 44px; }
   .surprise__close { width: 44px; height: 44px; }
+  .sound-toggle { width: 44px; height: 44px; }
   .btn { min-height: 48px; }
   .plate,
   .dress__list li { transform: none !important; }
@@ -2103,4 +2169,13 @@ body.is-shaking { animation: screenShake 0.62s cubic-bezier(0.36, 0.07, 0.19, 0.
   .cauldron__glow,
   .brew-world { display: none; }
   .cauldron.is-stirring { animation: none; }
+}
+
+/* ---------- 380px: keep the brand and both header buttons on one line ---------- */
+@media (max-width: 380px) {
+  .brand__main { font-size: 0.95rem; letter-spacing: 0; }
+  .brand__sub { display: none; }
+  .header__tools { gap: 6px; }
+  .sound-toggle,
+  .nav-toggle { width: 40px; height: 40px; }
 }
