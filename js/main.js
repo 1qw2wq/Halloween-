@@ -216,6 +216,7 @@
     if (!modal) return { open() {} };
 
     const card = $('.surprise__card', modal);
+    const portrait = $('.surprise__img', modal);
     const lightning = $('#lightning');
     const triggers = $$('[data-open-surprise]');
     const closers = $$('[data-close-surprise]', modal);
@@ -223,6 +224,53 @@
     let lastFocused = null;
     let openTimer = null;
     let isAnimating = false;
+    let pending = false; // reveal scheduled but not yet on screen (lightning flash)
+
+    /* The surprise has two faces. One is drawn at random for every visit, and
+       never the same one twice in a row — so repeat guests get a fresh scare. */
+    const PORTRAITS = [
+      {
+        src: '/assets/surprise.jpg',
+        alt: "A gleefully unsettling glitched portrait — the haunt's doorman",
+        position: 'center 32%'
+      },
+      {
+        src: '/assets/surprise-2.jpg',
+        alt: "A leering, long-nosed ghoul hunched over a laptop in a parked car — the haunt's chauffeur",
+        position: '64% 20%'
+      }
+    ];
+
+    let lastPortrait = -1;
+
+    function choosePortrait() {
+      if (!portrait) return;
+      let index = Math.floor(Math.random() * PORTRAITS.length);
+      if (PORTRAITS.length > 1 && index === lastPortrait) {
+        index = (index + 1) % PORTRAITS.length;
+      }
+      lastPortrait = index;
+
+      const pick = PORTRAITS[index];
+      if (portrait.getAttribute('src') !== pick.src) portrait.setAttribute('src', pick.src);
+      portrait.setAttribute('alt', pick.alt);
+      portrait.style.objectPosition = pick.position;
+      modal.dataset.portrait = String(index + 1);
+    }
+
+    /* Warm the pool while the page is idle so the swap never stalls the reveal. */
+    function preloadPortraits() {
+      PORTRAITS.forEach((item) => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = item.src;
+      });
+    }
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(preloadPortraits, { timeout: 3000 });
+    } else {
+      window.setTimeout(preloadPortraits, 1600);
+    }
 
     const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
@@ -258,10 +306,12 @@
     }
 
     function open(trigger) {
-      if (isAnimating || modal.classList.contains('is-open')) return;
+      if (isAnimating || pending || modal.classList.contains('is-open')) return;
       isAnimating = true;
+      pending = true;
       lastFocused = trigger || document.activeElement;
 
+      choosePortrait();
       zap();
       if (!reduceMotion) {
         FX.burst(window.innerWidth / 2, window.innerHeight / 2, {
@@ -276,6 +326,7 @@
 
       window.clearTimeout(openTimer);
       openTimer = window.setTimeout(() => {
+        pending = false;
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
         lockScroll(true);
@@ -286,7 +337,19 @@
     }
 
     function close() {
-      if (!modal.classList.contains('is-open')) return;
+      // ✕ or Esc during the lightning flash cancels the reveal entirely rather
+      // than letting the queued timer pop the panel open afterwards.
+      const wasPending = pending;
+      window.clearTimeout(openTimer);
+      pending = false;
+      isAnimating = false;
+
+      if (!modal.classList.contains('is-open')) {
+        if (wasPending && lastFocused && typeof lastFocused.focus === 'function') {
+          lastFocused.focus({ preventScroll: true });
+        }
+        return;
+      }
       modal.classList.remove('is-open');
 
       // Move focus back before hiding the dialog from assistive tech
@@ -295,7 +358,6 @@
       }
       modal.setAttribute('aria-hidden', 'true');
       lockScroll(false);
-      window.clearTimeout(openTimer);
       isAnimating = false;
     }
 
@@ -309,13 +371,14 @@
     closers.forEach((el) => el.addEventListener('click', close));
 
     document.addEventListener('keydown', (e) => {
-      if (!modal.classList.contains('is-open')) return;
-
-      if (e.key === 'Escape') {
+      // Esc is valid even while the reveal is still pending, so the flash can
+      // be interrupted; the focus trap only applies once the panel is visible.
+      if (e.key === 'Escape' && (modal.classList.contains('is-open') || pending)) {
         e.preventDefault();
         close();
         return;
       }
+      if (!modal.classList.contains('is-open')) return;
 
       // Focus trap
       if (e.key === 'Tab' && card) {

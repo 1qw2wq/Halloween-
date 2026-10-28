@@ -1797,7 +1797,10 @@ body.is-shaking { animation: screenShake 0.62s cubic-bezier(0.36, 0.07, 0.19, 0.
   object-position: center 32%;
   filter: saturate(0.92) contrast(1.06) brightness(0.94);
   animation: trappedZoom 16s ease-in-out infinite alternate;
+  /* the portrait is swapped at random per visit; a tiny fade hides the swap */
+  transition: opacity 0.28s ease;
 }
+.surprise.is-swapping .surprise__img { opacity: 0.35; }
 @keyframes trappedZoom {
   from { transform: scale(1.02); }
   to   { transform: scale(1.1); }

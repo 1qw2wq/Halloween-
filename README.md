@@ -77,7 +77,8 @@ vercel dev
 │   ├── ritual-pie.jpg      # Pumpkin Pie Crafting plate
 │   ├── ritual-games.jpg    # Haunted Game Night plate
 │   ├── velvet.jpg          # Crushed-velvet texture (dress-code panel)
-│   ├── surprise.jpg        # The "YOU'RE TRAPPED!" portrait
+│   ├── surprise.jpg        # "YOU'RE TRAPPED!" portrait A — the glitched doorman
+│   ├── surprise-2.jpg      # "YOU'RE TRAPPED!" portrait B — the laptop ghoul
 │   ├── og-image.jpg        # 1200×630 social preview card
 │   ├── favicon.ico         # 16/32/48/64 multi-size
 │   ├── favicon-32.png · apple-touch-icon.png
@@ -289,8 +290,11 @@ Images are dimensioned in markup (no layout shift), the hero is preloaded with
   begun" once it passes.
 - **Copy Address** — one tap copies the address; a toast confirms with a bat 🦇.
 - **"I Dare to Enter" / "Accept Invitation"** — red lightning flash, screen shake, then the
-  framed surprise panel: glitch portrait, *YOU'RE TRAPPED! 🎃*, and an exploding
-  🦇 🎃 👻 💀 confetti burst. Dismiss with `✕`, the backdrop or `Esc`.
+  framed surprise panel: *YOU'RE TRAPPED! 🎃* and an exploding 🦇 🎃 👻 💀 confetti burst.
+  **Two portraits** are drawn at random on every visit — the glitched doorman or the
+  long-nosed ghoul in his car — never the same one twice in a row, each with its own crop
+  and alt text. Both are preloaded while the page is idle. Dismiss with `✕`, the backdrop or
+  `Esc`; `Esc` also cancels the reveal mid-flash.
 - **Save the date** — generates a real `.ics` invite (with a 2-hour reminder) in-browser.
 - **The cauldron** — always simmering (swirling brew currents, five rising bubbles,
   riding sparks, five steam plumes and a flickering fire beneath the pot). Every stir
