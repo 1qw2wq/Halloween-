@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>A Night of Frights &amp; Delights · Halloween MMXXVI</title>
+  <meta name="description" content="Step into our haunt if you dare. A Night of Frights &amp; Delights — the ultimate Halloween gathering. October 31st, 15:00. Witches' kitchen, pumpkin pie crafting, haunted game night." />
+  <meta name="theme-color" content="#08080b" />
+
+  <meta name="robots" content="index, follow" />
+
+  <!--
+    Absolute URLs for social cards. After the first Vercel deploy, replace
+    https://halloween-frights.vercel.app with your production domain
+    (or set a custom domain in Vercel → Settings → Domains).
+  -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="A Night of Frights &amp; Delights" />
+  <meta property="og:url" content="https://halloween-frights.vercel.app/" />
+  <meta property="og:title" content="A Night of Frights &amp; Delights — Halloween MMXXVI" />
+  <meta property="og:description" content="Step into our haunt if you dare… October 31st, 15:00. Witches' Kitchen, Pumpkin Pie Crafting, Haunted Game Night. Costumes optional." />
+  <meta property="og:image" content="https://halloween-frights.vercel.app/assets/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Frights and Delights — a moonlit Victorian manor framed by red velvet curtains" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="A Night of Frights &amp; Delights — Halloween MMXXVI" />
+  <meta name="twitter:description" content="Step into our haunt if you dare… October 31st, 15:00." />
+  <meta name="twitter:image" content="https://halloween-frights.vercel.app/assets/og-image.jpg" />
+
+  <!-- Icons -->
+  <link rel="icon" href="/assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- Typography -->
+  <link rel="preload" href="/assets/fonts/playfair-display-var.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/lora-var.woff2" as="font" type="font/woff2" crossorigin />
+
+  <!-- Above-the-fold artwork -->
+  <link rel="preload" as="image" href="/assets/hero-haunt.jpg" fetchpriority="high" />
+
+  <!-- Project styles -->
+  <link rel="stylesheet" href="/css/style.css" />
+  <!-- Reveal-on-scroll hides content until JS runs; restore it when JS is off -->
+  <noscript><link rel="stylesheet" href="/css/no-js.css" /></noscript>
+</head>
+
+<body>
+
+  <!-- ================= AMBIENT LAYERS ================= -->
+  <div class="scene" aria-hidden="true">
+    <div class="scene__fog"></div>
+    <div class="scene__particles"><canvas id="particleCanvas"></canvas></div>
+    <div class="scene__sprites" id="floatingLayer"></div>
+    <div class="scene__grain"></div>
+  </div>
+
+  <div class="cursor-ember" id="cursorEmber" aria-hidden="true"></div>
+  <div class="cursor-trail" id="cursorTrail" aria-hidden="true"></div>
+
+  <div class="scroll-progress" aria-hidden="true"><span id="scrollBar"></span></div>
+
+  <!-- ================= TOP TICKER ================= -->
+  <div class="topbar">
+    <p class="topbar__left">A private gathering &nbsp;·&nbsp; October XXXI &nbsp;·&nbsp; XV:00</p>
+    <p class="topbar__right">Fuyang · Hangzhou</p>
+  </div>
+
+  <!-- ================= HEADER ================= -->
+  <header class="site-header">
+    <a href="#top" class="brand" aria-label="A Night of Frights and Delights — home">
+      <span class="brand__mark" aria-hidden="true">✦</span>
+      <span class="brand__text">
+        <span class="brand__main">Frights &amp; Delights</span>
+        <span class="brand__sub">Halloween · MMXXVI</span>
+      </span>
+    </a>
+
+    <nav class="site-nav" aria-label="Primary">
+      <a href="#rituals">The Rites</a>
+      <a href="#haunt">The Haunt</a>
+      <a href="#dress">Dress</a>
+      <a href="#rsvp" class="site-nav__cta">R.S.V.P.</a>
+    </nav>
+
+    <div class="header__tools">
+      <!-- Sound is synthesized in js/audio.js; this button only mutes it.
+           Hidden until that module confirms Web Audio support. -->
+      <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true" aria-label="Mute sound effects">
+        <span class="sound-toggle__bars" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="sound-toggle__slash" aria-hidden="true"></span>
+      </button>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+    <a href="#rituals">The Rites</a>
+    <a href="#haunt">The Haunt</a>
+    <a href="#dress">Dress</a>
+    <a href="#rsvp">R.S.V.P.</a>
+  </div>
+
+  <main id="top">
+
+    <!-- ================= HERO ================= -->
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero__backdrop" aria-hidden="true">
+        <img src="/assets/hero-haunt.jpg" alt="" class="hero__img" width="1800" height="1200" fetchpriority="high" decoding="async" />
+        <div class="hero__wash"></div>
+      </div>
+
+      <div class="hero__inner">
+        <p class="hero__script reveal">You are summoned to</p>
+
+        <h1 id="heroTitle" class="hero__title reveal">
+          <span class="hero__title-line">A night of</span>
+          <span class="hero__title-big">Frights <em>&amp;</em><br />Delights</span>
+          <span class="hero__title-rule" aria-hidden="true">✦</span>
+          <span class="hero__title-sub">The Ultimate Halloween Gathering</span>
+        </h1>
+
+        <p class="hero__tagline reveal">“Step into our haunt if you dare…”</p>
+
+        <!-- Countdown -->
+        <div class="countdown reveal" id="countdown" role="timer" aria-live="polite" aria-label="Countdown to the party">
+          <div class="countdown__unit">
+            <span class="countdown__num" data-unit="days">00</span>
+            <span class="countdown__label">Days</span>
+          </div>
+          <div class="countdown__unit">
+            <span class="countdown__num" data-unit="hours">00</span>
+            <span class="countdown__label">Hours</span>
+          </div>
+          <div class="countdown__unit">
+            <span class="countdown__num" data-unit="minutes">00</span>
+            <span class="countdown__label">Minutes</span>
+          </div>
+          <div class="countdown__unit">
+            <span class="countdown__num" data-unit="seconds">00</span>
+            <span class="countdown__label">Seconds</span>
+          </div>
+          <p class="countdown__until">until the veil thins · <strong>October 31st, 15:00</strong></p>
+        </div>
+
+        <div class="hero__actions reveal">
+          <button class="btn btn--blood btn--lg" id="acceptBtn" data-open-surprise>
+            I Dare to Enter <span class="btn__arrow" aria-hidden="true">→</span>
+          </button>
+          <a href="#rituals" class="btn btn--line btn--lg">See the Rites</a>
+        </div>
+
+        <ul class="hero__meta reveal">
+          <li>15:00 till late</li>
+          <li aria-hidden="true">✦</li>
+          <li>Yehufeng Shancheng · Fuyang</li>
+          <li aria-hidden="true">✦</li>
+          <li>Costumes optional</li>
+        </ul>
+      </div>
+
+      <a href="#rituals" class="hero__scroll" aria-label="Scroll to the rites">
+        <span class="hero__scroll-text">descend</span>
+        <span class="hero__scroll-line" aria-hidden="true"></span>
+      </a>
+    </section>
+
+    <!-- ================= TICKER ================= -->
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker__track">
+        <span>Witches' Kitchen</span><i>✦</i><span>Pumpkin Pie Crafting</span><i>✦</i><span>Haunted Game Night</span><i>✦</i><span>Costumes Optional</span><i>✦</i><span>Enter If You Dare</span><i>✦</i><span>Only Treats, No Tricks</span><i>✦</i>
+        <span>Witches' Kitchen</span><i>✦</i><span>Pumpkin Pie Crafting</span><i>✦</i><span>Haunted Game Night</span><i>✦</i><span>Costumes Optional</span><i>✦</i><span>Enter If You Dare</span><i>✦</i><span>Only Treats, No Tricks</span><i>✦</i>
+      </div>
+    </div>
+
+    <!-- ================= RITES ================= -->
+    <section class="section section--rites" id="rituals" aria-labelledby="ritualsTitle">
+      <header class="section__head section__head--split">
+        <div>
+          <p class="kicker reveal"><span aria-hidden="true">—</span> Chapter I</p>
+          <h2 class="section__title reveal" id="ritualsTitle">Three Rites<br />Await the Brave</h2>
+        </div>
+        <p class="section__lead reveal">Bring your appetite, your carving knife, and your worst losing face. The evening is divided into three unholy rituals, served in no sensible order.</p>
+      </header>
+
+      <div class="plates">
+        <!-- Rite I -->
+        <article class="plate reveal">
+          <figure class="plate__media">
+            <img src="/assets/ritual-kitchen.jpg" alt="A bubbling cauldron in a candlelit Victorian kitchen, dried herbs hanging from dark beams" width="900" height="1350" loading="lazy" decoding="async" />
+            <figcaption class="plate__num">I</figcaption>
+          </figure>
+          <div class="plate__body">
+            <p class="plate__meta">Rite the First</p>
+            <h3 class="plate__title">Witches' Kitchen</h3>
+            <p class="plate__sub">Cook your own meal</p>
+            <p class="plate__text">Bring your favorite ingredients! We're cooking spooky dishes and sharing DIY recipes.</p>
+            <ul class="plate__list">
+              <li>Bring your own ingredients</li>
+              <li>Recipe swap at midnight</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- Rite II -->
+        <article class="plate reveal">
+          <figure class="plate__media">
+            <img src="/assets/ritual-pie.jpg" alt="A glowing carved pumpkin beside a steaming pumpkin pie, cinnamon sticks and a knife on a dark table" width="900" height="1350" loading="lazy" decoding="async" />
+            <figcaption class="plate__num">II</figcaption>
+          </figure>
+          <div class="plate__body">
+            <p class="plate__meta">Rite the Second</p>
+            <h3 class="plate__title">Pumpkin Pie Crafting</h3>
+            <p class="plate__sub">Carve · Bake · Devour</p>
+            <p class="plate__text">Hands-on pumpkin carving and baking fresh, warm spiced homemade pumpkin pie.</p>
+            <ul class="plate__list">
+              <li>Carving station &amp; tools</li>
+              <li>Fresh from the oven</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- Rite III -->
+        <article class="plate reveal">
+          <figure class="plate__media">
+            <img src="/assets/ritual-games.jpg" alt="A seance table with playing cards, dice, a candle and a spilled glass of wine" width="900" height="1350" loading="lazy" decoding="async" />
+            <figcaption class="plate__num">III</figcaption>
+          </figure>
+          <div class="plate__body">
+            <p class="plate__meta">Rite the Third</p>
+            <h3 class="plate__title">Haunted Game Night</h3>
+            <p class="plate__sub">High stakes, low morals</p>
+            <p class="plate__text">UNO, Truth or Dare, and party card games that end friendships — lovingly.</p>
+            <ul class="plate__list">
+              <li>UNO tournament</li>
+              <li>Truth or Dare, after dark</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+
+      <p class="section__foot reveal">All rites are optional. All rites are remembered.</p>
+    </section>
+
+    <!-- ================= THE HAUNT ================= -->
+    <section class="section section--haunt" id="haunt" aria-labelledby="hauntTitle">
+      <header class="section__head section__head--left">
+        <p class="kicker reveal"><span aria-hidden="true">—</span> Chapter II</p>
+        <h2 class="section__title reveal" id="hauntTitle">Find the Haunt</h2>
+      </header>
+
+      <div class="haunt">
+        <figure class="haunt__plate reveal">
+          <img src="/assets/haunt.jpg" alt="A moonlit Victorian mansion behind iron gates, jack-o'-lanterns lining the path" width="1672" height="941" loading="lazy" decoding="async" />
+          <figcaption class="haunt__caption">The house on Jiulong Avenue, as seen by the last guest who arrived early.</figcaption>
+        </figure>
+
+        <div class="haunt__detail reveal">
+          <p class="haunt__label">The address of the damned</p>
+          <address class="haunt__address" id="addressText" lang="zh-Hans">杭州市富阳区九龙大道108号野风山城锦庐13-7</address>
+
+          <div class="haunt__rule" aria-hidden="true"></div>
+
+          <dl class="ledger">
+            <div>
+              <dt>Arrive</dt>
+              <dd>Oct 31 · 15:00</dd>
+            </div>
+            <div>
+              <dt>Depart</dt>
+              <dd>When the bats go home</dd>
+            </div>
+            <div>
+              <dt>Bring</dt>
+              <dd>Ingredients &amp; courage</dd>
+            </div>
+            <div>
+              <dt>Gate code</dt>
+              <dd>Knock thrice, then once</dd>
+            </div>
+          </dl>
+
+          <button class="btn btn--line btn--copy" id="copyAddressBtn" data-address="杭州市富阳区九龙大道108号野风山城锦庐13-7">
+            <span class="btn__icon" aria-hidden="true">⧉</span>
+            <span class="btn__label">Copy Address</span>
+          </button>
+          <p class="haunt__hint">Copied straight into your ride-hailing app of choice.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= DRESS ================= -->
+    <section class="section section--dress" id="dress" aria-labelledby="dressTitle">
+      <div class="dress reveal">
+        <p class="dress__script" aria-hidden="true">no pressure, darling</p>
+        <p class="kicker"><span aria-hidden="true">—</span> Chapter III</p>
+        <h2 class="section__title" id="dressTitle">Costumes Are<br /><em>Optional</em></h2>
+        <p class="dress__body">
+          Costumes welcome &amp; encouraged, but <strong>NOT mandatory!</strong>
+          Dress up if you dare, or just come as your normal, fabulous self.
+        </p>
+        <ul class="dress__list">
+          <li>Dress up if you dare</li>
+          <li>Come as you are</li>
+          <li>No pressure, ever</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================= RSVP ================= -->
+    <section class="section section--rsvp" id="rsvp" aria-labelledby="rsvpTitle">
+      <div class="rsvp reveal">
+        <div class="rsvp__stub" aria-hidden="true">
+          <p class="rsvp__stub-top">Admit one</p>
+          <p class="rsvp__stub-mid">A Night of Frights<br />&amp; Delights</p>
+          <p class="rsvp__stub-bot">Oct XXXI · MMXXVI</p>
+        </div>
+
+        <div class="rsvp__content">
+          <p class="kicker"><span aria-hidden="true">—</span> Final Chapter</p>
+          <h2 class="section__title" id="rsvpTitle">Will You Survive<br />the Night?</h2>
+          <p class="rsvp__lead">One click reserves your spot. Zero clicks and the ghosts will talk about you.</p>
+          <button class="btn btn--blood btn--xl" data-open-surprise>
+            Accept Invitation <span class="btn__arrow" aria-hidden="true">→</span>
+          </button>
+          <p class="rsvp__fine">October 31st · 15:00 · 杭州市富阳区九龙大道108号野风山城锦庐13-7</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <p class="site-footer__mark">✦</p>
+      <p class="site-footer__line">A Night of Frights &amp; Delights</p>
+      <p class="site-footer__fine">Summoned with questionable intentions · <span id="year">2026</span> · No tricks, only treats</p>
+    </div>
+  </footer>
+
+  <!-- ================= FLOATING GADGET: THE CAULDRON ================= -->
+  <button class="cauldron" id="cauldronBtn" aria-label="Stir the cauldron for a burst of magic">
+    <span class="cauldron__halo" aria-hidden="true"></span>
+    <span class="cauldron__pulse" aria-hidden="true"></span>
+
+    <!-- steam -->
+    <span class="cauldron__steam" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i>
+    </span>
+
+    <!-- fire under the pot -->
+    <span class="cauldron__fire" aria-hidden="true"><i></i><i></i><i></i></span>
+
+    <svg class="cauldron__svg" viewBox="0 0 120 120" aria-hidden="true">
+      <defs>
+        <linearGradient id="potGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#33333b" />
+          <stop offset="45%" stop-color="#1a1a20" />
+          <stop offset="100%" stop-color="#08080b" />
+        </linearGradient>
+        <linearGradient id="rimGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#3a3a44" />
+          <stop offset="45%" stop-color="#8d8d9c" />
+          <stop offset="100%" stop-color="#2c2c34" />
+        </linearGradient>
+        <radialGradient id="brewGrad" cx="45%" cy="30%" r="78%">
+          <stop offset="0%" stop-color="#ffb066" />
+          <stop offset="35%" stop-color="#ff6a3d" />
+          <stop offset="70%" stop-color="#b3121f" />
+          <stop offset="100%" stop-color="#3d060c" />
+        </radialGradient>
+        <radialGradient id="brewGlowGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(255,140,70,0.85)" />
+          <stop offset="60%" stop-color="rgba(179,18,31,0.35)" />
+          <stop offset="100%" stop-color="rgba(179,18,31,0)" />
+        </radialGradient>
+      </defs>
+
+      <!-- brew glow behind the rim -->
+      <ellipse cx="60" cy="42" rx="52" ry="26" fill="url(#brewGlowGrad)" class="cauldron__glow" />
+
+      <!-- liquid surface -->
+      <ellipse cx="60" cy="44" rx="36" ry="9" fill="url(#brewGrad)" class="cauldron__brew" />
+
+      <!-- swirling surface currents -->
+      <g class="cauldron__swirl">
+        <ellipse cx="60" cy="44" rx="24" ry="5.4" fill="none" stroke="rgba(255,214,170,0.5)" stroke-width="1" stroke-dasharray="5 7" />
+        <ellipse cx="60" cy="44" rx="14" ry="3.1" fill="none" stroke="rgba(255,150,110,0.55)" stroke-width="1" stroke-dasharray="3 6" />
+        <ellipse cx="60" cy="44" rx="31" ry="7.2" fill="none" stroke="rgba(255,120,90,0.22)" stroke-width="1" stroke-dasharray="2 9" />
+      </g>
+
+      <!-- bubbles -->
+      <circle cx="47" cy="42" r="2.6" fill="#ffd9b8" class="cauldron__bubble cauldron__bubble--1" />
+      <circle cx="67" cy="44.5" r="1.9" fill="#ffd9b8" class="cauldron__bubble cauldron__bubble--2" />
+      <circle cx="57" cy="39" r="1.5" fill="#ffe9d6" class="cauldron__bubble cauldron__bubble--3" />
+      <circle cx="71" cy="41" r="1.2" fill="#ffd9b8" class="cauldron__bubble cauldron__bubble--4" />
+      <circle cx="52" cy="46" r="1" fill="#ffe9d6" class="cauldron__bubble cauldron__bubble--5" />
+
+      <!-- sparks riding the brew -->
+      <circle cx="40" cy="40" r="0.9" fill="#ffb066" class="cauldron__spark cauldron__spark--1" />
+      <circle cx="62" cy="37" r="0.8" fill="#ffd9b8" class="cauldron__spark cauldron__spark--2" />
+      <circle cx="76" cy="46" r="0.9" fill="#ffb066" class="cauldron__spark cauldron__spark--3" />
+
+      <!-- pot body -->
+      <path d="M24 44h72c0 26-14 44-36 44S24 70 24 44z" fill="url(#potGrad)" stroke="#50505c" stroke-width="1.4" />
+      <!-- cast-iron banding + highlight -->
+      <path d="M28 57c8 6 56 6 64 0" stroke="#4a4a56" stroke-width="1.2" fill="none" opacity=".55" />
+      <path d="M30 70c8 5 52 5 60 0" stroke="#3a3a44" stroke-width="1" fill="none" opacity=".45" />
+      <path d="M32 52c2 14 6 24 12 30" stroke="rgba(255,255,255,0.14)" stroke-width="3" fill="none" stroke-linecap="round" />
+      <!-- rim -->
+      <path d="M20 43h80" stroke="url(#rimGrad)" stroke-width="3.6" stroke-linecap="round" />
+      <path d="M20 41.6h80" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" stroke-linecap="round" />
+      <!-- legs + handle -->
+      <path d="M36 88c-6 4-10 9-11 14" stroke="#33333b" stroke-width="4.2" stroke-linecap="round" />
+      <path d="M84 88c6 4 10 9 11 14" stroke="#33333b" stroke-width="4.2" stroke-linecap="round" />
+      <path d="M30 58c-6 2-9 8-7 13" stroke="#4a4a56" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8" />
+    </svg>
+
+    <span class="cauldron__tooltip">Stir the cauldron</span>
+    <span class="cauldron__ring" aria-hidden="true"></span>
+    <span class="cauldron__sparks" id="cauldronSparks" aria-hidden="true"></span>
+  </button>
+
+  <!-- ephemeral cauldron magic: rising embers, ghost wisps, charm runes -->
+  <div class="brew-world" id="brewWorld" aria-hidden="true"></div>
+
+  <!-- ================= TOAST ================= -->
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+    <span class="toast__icon" aria-hidden="true">✦</span>
+    <span class="toast__msg">Address copied to clipboard! 🦇</span>
+  </div>
+
+  <!-- ================= SURPRISE ================= -->
+  <div class="lightning" id="lightning" aria-hidden="true"></div>
+  <div class="ripple-layer" id="rippleLayer" aria-hidden="true"></div>
+
+  <div class="surprise" id="surprise" role="dialog" aria-modal="true" aria-labelledby="surpriseTitle" aria-hidden="true">
+    <div class="surprise__backdrop" data-close-surprise></div>
+
+    <div class="surprise__card" role="document">
+      <button class="surprise__close" id="surpriseClose" aria-label="Close the surprise" data-close-surprise>✕</button>
+
+      <div class="surprise__media">
+        <!-- src + alt are re-pointed at random from js/main.js (two surprises) -->
+        <img src="/assets/surprise.jpg" width="913" height="1100" decoding="async"
+             alt="A gleefully unsettling glitched portrait — the haunt's doorman"
+             class="surprise__img" />
+        <div class="surprise__media-overlay" aria-hidden="true"></div>
+        <span class="surprise__stamp" aria-hidden="true">No Exit</span>
+        <span class="surprise__admit" aria-hidden="true">Admit one · Oct XXXI</span>
+      </div>
+
+      <div class="surprise__body">
+        <p class="surprise__kicker">The door slams shut…</p>
+        <h2 class="surprise__title" id="surpriseTitle">YOU'RE TRAPPED! <span aria-hidden="true">🎃</span></h2>
+        <p class="surprise__sub">Just kidding! Your spot is reserved. See you on Oct 31st!</p>
+        <div class="surprise__actions">
+          <button class="btn btn--blood" data-close-surprise>✕ Escape</button>
+          <button class="btn btn--line" id="saveDateBtn">Save the date</button>
+        </div>
+        <p class="surprise__fine">or stay forever — the ghosts make excellent company</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/audio.js" defer></script>
+  <script src="/js/animations.js" defer></script>
+  <script src="/js/main.js" defer></script>
+</body>
+</html>

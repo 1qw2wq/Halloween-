@@ -1,0 +1,50 @@
+/* ==========================================================================
+   css/no-js.css — loaded only via <noscript> in index.html.
+   With JavaScript unavailable, scroll-reveal never runs, so every .reveal
+   element would stay at opacity:0. This restores the page as a plain,
+   fully readable invitation.
+   ========================================================================== */
+
+.reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+/* Nothing is animating, so don't imply motion */
+.hero__img,
+.sprite,
+.cauldron__halo,
+.cauldron__steam,
+.ticker__track,
+.hero__scroll-line::after {
+  animation: none;
+}
+
+/* Interactive-only furniture: no JS means no interaction, so remove it */
+.cauldron,
+.scroll-progress {
+  display: none;
+}
+
+/* A live countdown cannot run — show the date line instead of a row of zeros */
+.countdown__unit {
+  display: none;
+}
+.countdown {
+  justify-content: center;
+  padding: 14px 18px;
+}
+.countdown__until {
+  border-top: 0;
+  padding: 0;
+  font-size: 0.72rem;
+}
+
+/* Buttons that need JS stay visible but are clearly inert */
+[data-open-surprise],
+#copyAddressBtn,
+#saveDateBtn {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

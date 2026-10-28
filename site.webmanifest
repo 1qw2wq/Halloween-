@@ -1,0 +1,24 @@
+{
+  "name": "A Night of Frights & Delights — Halloween Invitation",
+  "short_name": "Frights & Delights",
+  "description": "A spooky-luxury Halloween party invitation. October 31st, 18:00. Enter if you dare.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#08080b",
+  "theme_color": "#08080b",
+  "icons": [
+    {
+      "src": "/assets/favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
