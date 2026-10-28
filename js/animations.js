@@ -31,6 +31,7 @@
   const mqMobile = window.matchMedia('(max-width: 760px)');
   const mqFine = window.matchMedia('(hover: hover) and (pointer: fine)');
 
+  const rippleLayer = $('#rippleLayer');
   const reduceMotion = mqReduce.matches;
   const finePointer = mqFine.matches;
   const cores = navigator.hardwareConcurrency || 4;
@@ -379,27 +380,159 @@
   })();
 
   /* ======================================================================
-     4. CAULDRON — ink ripples + ember burst
+     4. THE CAULDRON — a layered spell on every stir
+     All effects are ephemeral DOM nodes or canvas blits, created on demand and
+     removed on animationend. No persistent render loop, nothing to leak.
      ====================================================================== */
-  (() => {
-    const cauldron = $('#cauldronBtn');
-    const rippleLayer = $('#rippleLayer');
-    if (!cauldron || !rippleLayer) return;
+  const Cauldron = (() => {
+    const button = $('#cauldronBtn');
+    const world = $('#brewWorld');
+    const sparkHost = $('#cauldronSparks');
+    if (!button || !world) return { stirs: 0 };
+
+    const INCANTATIONS = [
+      'double, double',
+      'eye of newt',
+      'toil and trouble',
+      'fire burn',
+      'cauldron bubble',
+      'something wicked',
+      'wool of bat',
+      'tongue of dog',
+      'adders fork',
+      'bubble, bubble'
+    ];
+
+    const MILESTONES = {
+      3: 'The brew stirs itself now.',
+      7: 'Excellent. The dead are listening.',
+      13: 'Thirteen stirs. You have been noticed.'
+    };
 
     let stirs = 0;
+    let lastCharm = '';
 
-    cauldron.addEventListener('click', (e) => {
+    /* main.js owns the toast; it registers itself on HallowFX after this file
+       loads, so look it up at call time rather than closing over it. */
+    const notify = (message, glyph) => {
+      const fx = window.HallowFX;
+      if (fx && typeof fx.toast === 'function') fx.toast(message, glyph);
+    };
+
+    const pick = (arr) => arr[randInt(0, arr.length - 1)];
+
+    function addTemp(parent, el, ms) {
+      parent.appendChild(el);
+      const cleanup = () => el.remove();
+      el.addEventListener('animationend', cleanup, { once: true });
+      // safety net in case the animation is cancelled or the tab is hidden
+      window.setTimeout(cleanup, ms);
+      return el;
+    }
+
+    /* Sparks flung from the button itself */
+    function burstSparks(count) {
+      if (!sparkHost || reduceMotion) return;
+      for (let i = 0; i < count; i++) {
+        const s = document.createElement('i');
+        const angle = rand(-Math.PI * 0.95, -Math.PI * 0.05);
+        const dist = rand(24, 62);
+        s.style.setProperty('--tx', (Math.cos(angle) * dist).toFixed(1) + 'px');
+        s.style.setProperty('--ty', (Math.sin(angle) * dist).toFixed(1) + 'px');
+        s.style.animationDelay = rand(0, 0.08).toFixed(2) + 's';
+        addTemp(sparkHost, s, 1400);
+      }
+    }
+
+    /* Embers that rise out of the pot and across the page */
+    function riseEmbers(x, y, count) {
+      if (reduceMotion) return;
+      for (let i = 0; i < count; i++) {
+        const e = document.createElement('span');
+        e.className = 'brew-ember';
+        const size = rand(4, 11);
+        e.style.left = x + rand(-26, 26) + 'px';
+        e.style.top = y + 'px';
+        e.style.setProperty('--size', size.toFixed(1) + 'px');
+        e.style.setProperty('--dx', rand(-90, 70).toFixed(0) + 'px');
+        e.style.setProperty('--dy', -rand(120, 360).toFixed(0) + 'px');
+        e.style.setProperty('--dur', rand(1.8, 3.4).toFixed(2) + 's');
+        e.style.animationDelay = rand(0, 0.28).toFixed(2) + 's';
+        addTemp(world, e, 4200);
+      }
+    }
+
+    /* Soft ghost wisps drifting upward */
+    function wisps(x, y, count) {
+      if (reduceMotion) return;
+      for (let i = 0; i < count; i++) {
+        const w = document.createElement('span');
+        w.className = 'brew-wisp';
+        const size = rand(80, 190);
+        w.style.left = x - size / 2 + rand(-30, 30) + 'px';
+        w.style.top = y - size / 2 + 'px';
+        w.style.setProperty('--size', size.toFixed(0) + 'px');
+        w.style.setProperty('--dx', rand(-70, 70).toFixed(0) + 'px');
+        w.style.setProperty('--dy', -rand(120, 260).toFixed(0) + 'px');
+        w.style.setProperty('--dur', rand(2.8, 4.4).toFixed(2) + 's');
+        w.style.animationDelay = rand(0, 0.3).toFixed(2) + 's';
+        addTemp(world, w, 5200);
+      }
+    }
+
+    /* A handwritten incantation floats up from the pot */
+    function charm(x, y) {
+      if (reduceMotion) return;
+      let words = pick(INCANTATIONS);
+      if (words === lastCharm) words = pick(INCANTATIONS);
+      lastCharm = words;
+
+      const c = document.createElement('span');
+      c.className = 'brew-charm';
+      c.textContent = words;
+      c.setAttribute('aria-hidden', 'true');
+      c.style.left = clamp(x + rand(-40, 40), 90, window.innerWidth - 90) + 'px';
+      c.style.top = y - rand(18, 46) + 'px';
+      c.style.setProperty('--dur', rand(2.2, 3).toFixed(2) + 's');
+      addTemp(world, c, 3600);
+    }
+
+    /* Whole-page warm flash, anchored to the button */
+    function flash(x, y) {
+      if (reduceMotion) return;
+      const f = document.createElement('div');
+      f.className = 'brew-flash';
+      f.style.setProperty('--fx', ((x / window.innerWidth) * 100).toFixed(1) + '%');
+      f.style.setProperty('--fy', ((y / window.innerHeight) * 100).toFixed(1) + '%');
+      addTemp(world, f, 1200);
+    }
+
+    button.addEventListener('click', (e) => {
       stirs += 1;
-      const rect = cauldron.getBoundingClientRect();
+      const rect = button.getBoundingClientRect();
       const cx = e.clientX || rect.left + rect.width / 2;
       const cy = e.clientY || rect.top + rect.height / 2;
+      const potX = rect.left + rect.width / 2;
+      const potY = rect.top + rect.height * 0.42;
 
-      cauldron.classList.remove('is-stirring');
-      void cauldron.offsetWidth;
-      cauldron.classList.add('is-stirring');
+      // pot animation restart
+      button.classList.remove('is-stirring');
+      void button.offsetWidth;
+      button.classList.add('is-stirring');
+      window.setTimeout(() => button.classList.remove('is-stirring'), 900);
 
-      Dust.burst(cx, cy, { count: 40 });
+      // density scales with device capability
+      const scale = lowEnd ? 0.55 : 1;
+      const milestone = MILESTONES[stirs] || null;
+      const big = stirs % 3 === 0;
 
+      burstSparks(Math.round((big ? 16 : 10) * scale));
+      riseEmbers(potX, potY, Math.round((big ? 16 : 10) * scale));
+      wisps(potX, potY, lowEnd ? 1 : big ? 3 : 2);
+      flash(cx, cy);
+      Dust.burst(cx, cy, { count: big ? 54 : 34 });
+
+      // ripples across the viewport
       const rings = lowEnd ? 2 : 3;
       for (let i = 0; i < rings; i++) {
         window.setTimeout(() => {
@@ -407,13 +540,24 @@
           ring.className = 'ripple' + (i % 2 ? ' ripple--alt' : '');
           ring.style.left = cx + 'px';
           ring.style.top = cy + 'px';
-          rippleLayer.appendChild(ring);
-          window.setTimeout(() => ring.remove(), 1600);
-        }, i * 130);
+          addTemp(rippleLayer, ring, 1900);
+        }, i * 120);
       }
 
-      cauldron.setAttribute('aria-label', `Stir the cauldron again (stirred ${stirs} times)`);
+      // incantation, or a milestone line instead
+      window.setTimeout(() => charm(potX, potY), 120);
+      if (milestone) {
+        window.setTimeout(() => notify(milestone, '✦'), 420);
+        Confetti.spawn({ count: 26, originX: potX / window.innerWidth, originY: potY / window.innerHeight, spread: 0.8 });
+      }
+
+      // haptics where supported
+      if (navigator.vibrate) { try { navigator.vibrate(big ? [10, 40, 14] : 12); } catch (err) { /* ignore */ } }
+
+      button.setAttribute('aria-label', `Stir the cauldron again (stirred ${stirs} times)`);
     });
+
+    return { get stirs() { return stirs; } };
   })();
 
   /* ======================================================================

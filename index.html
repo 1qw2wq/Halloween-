@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>A Night of Frights &amp; Delights · Halloween MMXXVI</title>
-  <meta name="description" content="Step into our haunt if you dare. A Night of Frights &amp; Delights — the ultimate Halloween gathering. October 31st, 18:00. Witches' kitchen, pumpkin pie crafting, haunted game night." />
+  <meta name="description" content="Step into our haunt if you dare. A Night of Frights &amp; Delights — the ultimate Halloween gathering. October 31st, 15:00. Witches' kitchen, pumpkin pie crafting, haunted game night." />
   <meta name="theme-color" content="#08080b" />
 
   <meta name="robots" content="index, follow" />
@@ -18,7 +18,7 @@
   <meta property="og:site_name" content="A Night of Frights &amp; Delights" />
   <meta property="og:url" content="https://halloween-frights.vercel.app/" />
   <meta property="og:title" content="A Night of Frights &amp; Delights — Halloween MMXXVI" />
-  <meta property="og:description" content="Step into our haunt if you dare… October 31st, 18:00. Witches' Kitchen, Pumpkin Pie Crafting, Haunted Game Night. Costumes optional." />
+  <meta property="og:description" content="Step into our haunt if you dare… October 31st, 15:00. Witches' Kitchen, Pumpkin Pie Crafting, Haunted Game Night. Costumes optional." />
   <meta property="og:image" content="https://halloween-frights.vercel.app/assets/og-image.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -26,7 +26,7 @@
   <meta property="og:locale" content="en_US" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="A Night of Frights &amp; Delights — Halloween MMXXVI" />
-  <meta name="twitter:description" content="Step into our haunt if you dare… October 31st, 18:00." />
+  <meta name="twitter:description" content="Step into our haunt if you dare… October 31st, 15:00." />
   <meta name="twitter:image" content="https://halloween-frights.vercel.app/assets/og-image.jpg" />
 
   <!-- Icons -->
@@ -65,7 +65,7 @@
 
   <!-- ================= TOP TICKER ================= -->
   <div class="topbar">
-    <p class="topbar__left">A private gathering &nbsp;·&nbsp; October XXXI &nbsp;·&nbsp; XVIII:00</p>
+    <p class="topbar__left">A private gathering &nbsp;·&nbsp; October XXXI &nbsp;·&nbsp; XV:00</p>
     <p class="topbar__right">Fuyang · Hangzhou</p>
   </div>
 
@@ -137,7 +137,7 @@
             <span class="countdown__num" data-unit="seconds">00</span>
             <span class="countdown__label">Seconds</span>
           </div>
-          <p class="countdown__until">until the veil thins · <strong>October 31st, 18:00</strong></p>
+          <p class="countdown__until">until the veil thins · <strong>October 31st, 15:00</strong></p>
         </div>
 
         <div class="hero__actions reveal">
@@ -148,7 +148,7 @@
         </div>
 
         <ul class="hero__meta reveal">
-          <li>18:00 till late</li>
+          <li>15:00 till late</li>
           <li aria-hidden="true">✦</li>
           <li>Yehufeng Shancheng · Fuyang</li>
           <li aria-hidden="true">✦</li>
@@ -261,7 +261,7 @@
           <dl class="ledger">
             <div>
               <dt>Arrive</dt>
-              <dd>Oct 31 · 18:00</dd>
+              <dd>Oct 31 · 15:00</dd>
             </div>
             <div>
               <dt>Depart</dt>
@@ -320,7 +320,7 @@
           <button class="btn btn--blood btn--xl" data-open-surprise>
             Accept Invitation <span class="btn__arrow" aria-hidden="true">→</span>
           </button>
-          <p class="rsvp__fine">October 31st · 18:00 · 杭州市富阳区九龙大道108号野风山城锦庐13-7</p>
+          <p class="rsvp__fine">October 31st · 15:00 · 杭州市富阳区九龙大道108号野风山城锦庐13-7</p>
         </div>
       </div>
     </section>
@@ -335,36 +335,91 @@
     </div>
   </footer>
 
-  <!-- ================= FLOATING GADGET ================= -->
+  <!-- ================= FLOATING GADGET: THE CAULDRON ================= -->
   <button class="cauldron" id="cauldronBtn" aria-label="Stir the cauldron for a burst of magic">
     <span class="cauldron__halo" aria-hidden="true"></span>
-    <span class="cauldron__steam" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="cauldron__pulse" aria-hidden="true"></span>
+
+    <!-- steam -->
+    <span class="cauldron__steam" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i>
+    </span>
+
+    <!-- fire under the pot -->
+    <span class="cauldron__fire" aria-hidden="true"><i></i><i></i><i></i></span>
+
     <svg class="cauldron__svg" viewBox="0 0 120 120" aria-hidden="true">
       <defs>
         <linearGradient id="potGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#2b2b31" />
-          <stop offset="55%" stop-color="#141418" />
+          <stop offset="0%" stop-color="#33333b" />
+          <stop offset="45%" stop-color="#1a1a20" />
           <stop offset="100%" stop-color="#08080b" />
         </linearGradient>
-        <radialGradient id="brewGrad" cx="50%" cy="35%" r="70%">
-          <stop offset="0%" stop-color="#ff6a3d" />
-          <stop offset="55%" stop-color="#b3121f" />
-          <stop offset="100%" stop-color="#4a0910" />
+        <linearGradient id="rimGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#3a3a44" />
+          <stop offset="45%" stop-color="#8d8d9c" />
+          <stop offset="100%" stop-color="#2c2c34" />
+        </linearGradient>
+        <radialGradient id="brewGrad" cx="45%" cy="30%" r="78%">
+          <stop offset="0%" stop-color="#ffb066" />
+          <stop offset="35%" stop-color="#ff6a3d" />
+          <stop offset="70%" stop-color="#b3121f" />
+          <stop offset="100%" stop-color="#3d060c" />
+        </radialGradient>
+        <radialGradient id="brewGlowGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(255,140,70,0.85)" />
+          <stop offset="60%" stop-color="rgba(179,18,31,0.35)" />
+          <stop offset="100%" stop-color="rgba(179,18,31,0)" />
         </radialGradient>
       </defs>
+
+      <!-- brew glow behind the rim -->
+      <ellipse cx="60" cy="42" rx="52" ry="26" fill="url(#brewGlowGrad)" class="cauldron__glow" />
+
+      <!-- liquid surface -->
       <ellipse cx="60" cy="44" rx="36" ry="9" fill="url(#brewGrad)" class="cauldron__brew" />
-      <circle cx="48" cy="41" r="2.4" fill="#ffd0a0" class="cauldron__bubble cauldron__bubble--1" />
-      <circle cx="66" cy="44" r="1.8" fill="#ffd0a0" class="cauldron__bubble cauldron__bubble--2" />
-      <circle cx="58" cy="38" r="1.4" fill="#ffd0a0" class="cauldron__bubble cauldron__bubble--3" />
-      <path d="M24 44h72c0 26-14 44-36 44S24 70 24 44z" fill="url(#potGrad)" stroke="#4a4a52" stroke-width="1.6" />
-      <path d="M28 56c8 6 56 6 64 0" stroke="#4a4a52" stroke-width="1.2" fill="none" opacity=".5" />
-      <path d="M20 43h80" stroke="#5c5c66" stroke-width="3.4" stroke-linecap="round" />
-      <path d="M36 88c-6 4-10 9-11 14" stroke="#3a3a42" stroke-width="4" stroke-linecap="round" />
-      <path d="M84 88c6 4 10 9 11 14" stroke="#3a3a42" stroke-width="4" stroke-linecap="round" />
+
+      <!-- swirling surface currents -->
+      <g class="cauldron__swirl">
+        <ellipse cx="60" cy="44" rx="24" ry="5.4" fill="none" stroke="rgba(255,214,170,0.5)" stroke-width="1" stroke-dasharray="5 7" />
+        <ellipse cx="60" cy="44" rx="14" ry="3.1" fill="none" stroke="rgba(255,150,110,0.55)" stroke-width="1" stroke-dasharray="3 6" />
+        <ellipse cx="60" cy="44" rx="31" ry="7.2" fill="none" stroke="rgba(255,120,90,0.22)" stroke-width="1" stroke-dasharray="2 9" />
+      </g>
+
+      <!-- bubbles -->
+      <circle cx="47" cy="42" r="2.6" fill="#ffd9b8" class="cauldron__bubble cauldron__bubble--1" />
+      <circle cx="67" cy="44.5" r="1.9" fill="#ffd9b8" class="cauldron__bubble cauldron__bubble--2" />
+      <circle cx="57" cy="39" r="1.5" fill="#ffe9d6" class="cauldron__bubble cauldron__bubble--3" />
+      <circle cx="71" cy="41" r="1.2" fill="#ffd9b8" class="cauldron__bubble cauldron__bubble--4" />
+      <circle cx="52" cy="46" r="1" fill="#ffe9d6" class="cauldron__bubble cauldron__bubble--5" />
+
+      <!-- sparks riding the brew -->
+      <circle cx="40" cy="40" r="0.9" fill="#ffb066" class="cauldron__spark cauldron__spark--1" />
+      <circle cx="62" cy="37" r="0.8" fill="#ffd9b8" class="cauldron__spark cauldron__spark--2" />
+      <circle cx="76" cy="46" r="0.9" fill="#ffb066" class="cauldron__spark cauldron__spark--3" />
+
+      <!-- pot body -->
+      <path d="M24 44h72c0 26-14 44-36 44S24 70 24 44z" fill="url(#potGrad)" stroke="#50505c" stroke-width="1.4" />
+      <!-- cast-iron banding + highlight -->
+      <path d="M28 57c8 6 56 6 64 0" stroke="#4a4a56" stroke-width="1.2" fill="none" opacity=".55" />
+      <path d="M30 70c8 5 52 5 60 0" stroke="#3a3a44" stroke-width="1" fill="none" opacity=".45" />
+      <path d="M32 52c2 14 6 24 12 30" stroke="rgba(255,255,255,0.14)" stroke-width="3" fill="none" stroke-linecap="round" />
+      <!-- rim -->
+      <path d="M20 43h80" stroke="url(#rimGrad)" stroke-width="3.6" stroke-linecap="round" />
+      <path d="M20 41.6h80" stroke="rgba(255,255,255,0.22)" stroke-width="0.8" stroke-linecap="round" />
+      <!-- legs + handle -->
+      <path d="M36 88c-6 4-10 9-11 14" stroke="#33333b" stroke-width="4.2" stroke-linecap="round" />
+      <path d="M84 88c6 4 10 9 11 14" stroke="#33333b" stroke-width="4.2" stroke-linecap="round" />
+      <path d="M30 58c-6 2-9 8-7 13" stroke="#4a4a56" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8" />
     </svg>
+
     <span class="cauldron__tooltip">Stir the cauldron</span>
     <span class="cauldron__ring" aria-hidden="true"></span>
+    <span class="cauldron__sparks" id="cauldronSparks" aria-hidden="true"></span>
   </button>
+
+  <!-- ephemeral cauldron magic: rising embers, ghost wisps, charm runes -->
+  <div class="brew-world" id="brewWorld" aria-hidden="true"></div>
 
   <!-- ================= TOAST ================= -->
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">

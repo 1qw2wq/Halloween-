@@ -8,7 +8,7 @@ backend, no framework.
 
 | | |
 |---|---|
-| **Event** | October 31st · 18:00 (live countdown) |
+| **Event** | October 31st · 15:00 (live countdown) |
 | **Venue** | 杭州市富阳区九龙大道108号野风山城锦庐13-7 |
 | **Stack** | HTML + CSS + vanilla JS · three self-hosted variable fonts · one dust `<canvas>` |
 | **Host** | Vercel — static, zero-config, served from the repo root |
@@ -278,21 +278,27 @@ Images are dimensioned in markup (no layout shift), the hero is preloaded with
 
 | | |
 |---|---|
-| **When** | October 31st · 18:00 (live countdown, local timezone) |
+| **When** | October 31st · 15:00 (live countdown, local timezone) |
 | **Where** | 杭州市富阳区九龙大道108号野风山城锦庐13-7 |
 | **Rituals** | Witches' Kitchen · Pumpkin Pie Crafting · Haunted Game Night |
 | **Dress code** | Costumes welcome &amp; encouraged — **not mandatory** |
 
 ### What's interactive
 
-- **Live countdown** — counts to the next Oct 31 · 18:00 and switches to "the haunt has
+- **Live countdown** — counts to the next Oct 31 · 15:00 and switches to "the haunt has
   begun" once it passes.
 - **Copy Address** — one tap copies the address; a toast confirms with a bat 🦇.
 - **"I Dare to Enter" / "Accept Invitation"** — red lightning flash, screen shake, then the
   framed surprise panel: glitch portrait, *YOU'RE TRAPPED! 🎃*, and an exploding
   🦇 🎃 👻 💀 confetti burst. Dismiss with `✕`, the backdrop or `Esc`.
 - **Save the date** — generates a real `.ics` invite (with a 2-hour reminder) in-browser.
-- **Floating cauldron** — ink ripples and an ember burst on click.
+- **The cauldron** — always simmering (swirling brew currents, five rising bubbles,
+  riding sparks, five steam plumes and a flickering fire beneath the pot). Every stir
+  layers, in order: a squash-and-stretch bounce, sparks flung from the button, a warm
+  full-page flash, rising embers and ghost wisps that escape into the page, an ink ripple
+  across the viewport, an ember burst on the dust canvas, and a handwritten incantation
+  ("double, double", "eye of newt"…) floating up from the brew. Every third stir is
+  bigger, and stirs 3 / 7 / 13 earn a milestone line. Haptics fire on supported phones.
 - **Ambient layers** — dust motes catching candlelight, drifting mist, sparse bat silhouettes.
 - **Custom cursor** — a fine point with a slow trailing ring (desktop only).
 - **Plates** — ritual cards lift, their numeral stamps fill blood red, photographs enlarge
@@ -329,7 +335,7 @@ Images are dimensioned in markup (no layout shift), the hero is preloaded with
 
 | What | Where |
 |---|---|
-| **Date / time** | `js/main.js` → `const PARTY = { day: 31, hour: 18, minute: 0, … }` |
+| **Date / time** | `js/main.js` → `const PARTY = { day: 31, hour: 15, minute: 0, … }` |
 | **Address** | the `<address>` text **and** `data-address` on `#copyAddressBtn` in `index.html` (keep them identical) |
 | **Colours, fonts, spacing** | token block at the top of `css/style.css` |
 | **Photography** | replace files in `assets/` — the layout crops to 4:5 (plates), 16:9 (hero) and 1:1 (modal) automatically |

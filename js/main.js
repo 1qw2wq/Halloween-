@@ -15,14 +15,14 @@
 
   const PARTY = {
     day: 31,
-    hour: 18,
+    hour: 15,
     minute: 0,
     address: '杭州市富阳区九龙大道108号野风山城锦庐13-7',
     title: 'A Night of Frights & Delights — Halloween Party'
   };
 
   /* ------------------------------------------------------------------ *
-   * 1. COUNTDOWN → October 31st, 18:00 (local time)
+   * 1. COUNTDOWN → October 31st, 15:00 (local time)
    * ------------------------------------------------------------------ */
   const Countdown = (() => {
     const root = $('#countdown');
@@ -88,7 +88,7 @@
       root.setAttribute(
         'aria-label',
         `${nodes.days.textContent} days, ${nodes.hours.textContent} hours, ` +
-        `${nodes.minutes.textContent} minutes until the party on October 31st at 18:00`
+        `${nodes.minutes.textContent} minutes until the party on October 31st at 15:00`
       );
     }
 
@@ -122,6 +122,10 @@
 
     return { show };
   })();
+
+  /* Expose the toast so other modules (the cauldron milestones) can use it */
+  window.HallowFX = window.HallowFX || {};
+  window.HallowFX.toast = Toast.show;
 
   /* ------------------------------------------------------------------ *
    * 3. COPY ADDRESS
@@ -341,7 +345,7 @@
     if (!btn) return;
 
     function icsDate(date) {
-      // Floating local time (no Z) so the party stays at 18:00 wherever it's opened
+      // Floating local time (no Z) so the party stays at 15:00 wherever it's opened
       return (
         date.getFullYear().toString() +
         pad(date.getMonth() + 1) +
@@ -401,7 +405,7 @@
         window.setTimeout(() => URL.revokeObjectURL(url), 1500);
         Toast.show('Calendar invite saved — see you there!', '✦');
       } catch (err) {
-        Toast.show('Save it the old way: Oct 31, 18:00', '✦');
+        Toast.show('Save it the old way: Oct 31, 15:00', '✦');
       }
     });
   })();
